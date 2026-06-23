@@ -9,9 +9,15 @@ export type DashboardModule =
   | "curative";
 
 export interface Tenant {
-  /** stable slug; must match the Clerk Organization slug */
+  /** stable slug; ideally the Clerk Organization slug is set to this exact value */
   slug: string;
   displayName: string;
+  /**
+   * Extra Clerk org slugs that also map to this tenant. Use this when Clerk
+   * auto-generated a slug (e.g. "fervo-energy-1782...") instead of the clean one.
+   * Cleaner fix: set the Clerk org slug to `slug` above and drop the alias.
+   */
+  aliases?: string[];
   monday: {
     workspaceId: string;
     boards: {
@@ -34,6 +40,7 @@ export const TENANTS: Record<string, Tenant> = {
   fervo: {
     slug: "fervo",
     displayName: "Fervo Energy",
+    aliases: ["fervo-energy-1782222787179794763"],
     monday: {
       workspaceId: "7276746",
       boards: {
@@ -54,9 +61,13 @@ export const TENANTS: Record<string, Tenant> = {
 
 export type BoardKey = keyof Tenant["monday"]["boards"];
 
-/** Resolve a tenant by slug (the user's Clerk org slug). Throws if unknown. */
+/** Resolve a tenant by the user's Clerk org slug (or one of its aliases). Throws if unknown. */
 export function getTenant(slug: string | null | undefined): Tenant {
-  const t = slug ? TENANTS[slug] : undefined;
-  if (!t) throw new Error(`Unknown or missing tenant for "${slug}"`);
-  return t;
+  if (slug) {
+    const direct = TENANTS[slug];
+    if (direct) return direct;
+    const byAlias = Object.values(TENANTS).find((t) => t.aliases?.includes(slug));
+    if (byAlias) return byAlias;
+  }
+  throw new Error(`Unknown or missing tenant for "${slug}"`);
 }
