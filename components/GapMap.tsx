@@ -19,6 +19,8 @@ function place(t: MapTownship): Placed | null {
   const tNum = +m[1], tDir = m[2].toUpperCase(), rNum = +m[3], rDir = m[4].toUpperCase();
   return { ...t, signedT: tDir === "N" ? tNum : -tNum, signedR: rDir === "E" ? rNum : -rNum, label: `${tNum}${tDir} ${rNum}${rDir}` };
 }
+// derive a township label from grid coordinates (for empty positions)
+const trLabel = (st: number, sr: number) => `${Math.abs(st)}${st > 0 ? "N" : "S"} ${Math.abs(sr)}${sr > 0 ? "E" : "W"}`;
 
 function cellColor(layer: Layer, agg: MapSectionAgg | undefined, severed: number) {
   if (!agg || agg.tracts === 0) return { bg: EMPTY, fg: "#cbd1da" };
@@ -53,8 +55,10 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
   const { placed, cols, rows, unplaced } = useMemo(() => {
     const p: Placed[] = [], u: MapTownship[] = [];
     for (const t of data.townships) { const x = place(t); if (x) p.push(x); else u.push(t); }
-    const cols = [...new Set(p.map((t) => t.signedR))].sort((a, b) => a - b);     // West → East (left → right)
-    const rows = [...new Set(p.map((t) => t.signedT))].sort((a, b) => b - a);     // North → South (top → bottom)
+    // full contiguous range so empty townships still get a labeled cell (skip 0 — no T0/R0)
+    const span = (vals: number[]) => { if (!vals.length) return []; const lo = Math.min(...vals), hi = Math.max(...vals); const out: number[] = []; for (let i = lo; i <= hi; i++) if (i !== 0) out.push(i); return out; };
+    const cols = span(p.map((t) => t.signedR));                  // West → East (left → right)
+    const rows = span(p.map((t) => t.signedT)).reverse();        // North → South (top → bottom)
     return { placed: p, cols, rows, unplaced: u };
   }, [data.townships]);
 
@@ -106,20 +110,25 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
       {/* map (left) + owner side panel (right) */}
       <div style={{ display: "flex", gap: 18, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0, overflowX: "auto", paddingBottom: 4 }}>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols.length}, minmax(116px, 1fr))`, gap: 8, minWidth: cols.length * 116 }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols.length}, minmax(92px, 1fr))`, gap: 6, minWidth: cols.length * 92 }}>
             {rows.map((sr) =>
               cols.map((sc) => {
                 const t = placed.find((x) => x.signedT === sr && x.signedR === sc);
-                if (!t) return <div key={`${sr}-${sc}`} style={{ border: `1px dashed ${LINE}`, borderRadius: 7, minHeight: 116, background: "#fcfcfd" }} />;
+                if (!t) return (
+                  <div key={`${sr}-${sc}`} style={{ border: `1px dashed ${LINE}`, borderRadius: 6, padding: 7, background: "#fcfcfd", minHeight: 44 }}>
+                    <span style={{ fontWeight: 600, fontSize: 10, color: "#b6bcc6" }}>{trLabel(sr, sc)}</span>
+                    <div style={{ fontSize: 9, color: "#cbd0d8", marginTop: 3 }}>no tracts</div>
+                  </div>
+                );
                 const on = openTwp === t.twp;
                 return (
                   <button key={t.twp} onClick={() => { setOpenTwp(on ? null : t.twp); setSecFilter(null); }} style={{
-                    textAlign: "left", cursor: "pointer", background: "#fff", borderRadius: 7, padding: 8,
+                    textAlign: "left", cursor: "pointer", background: "#fff", borderRadius: 6, padding: 7,
                     border: on ? `2px solid ${ACCENT}` : `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16,24,40,.05)",
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                      <span style={{ fontWeight: 700, fontSize: 12 }}>{t.label}</span>
-                      <span className="num" style={{ fontSize: 10, color: MUTED }}>{t.leased}/{t.tracts}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+                      <span style={{ fontWeight: 700, fontSize: 10.5 }}>{t.label}</span>
+                      <span className="num" style={{ fontSize: 9, color: MUTED }}>{t.leased}/{t.tracts}</span>
                     </div>
                     <MiniGrid twp={t} layer={layer} severedInSec={severedInSec} />
                   </button>

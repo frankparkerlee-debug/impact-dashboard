@@ -1,68 +1,94 @@
-import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
-import { loadPayments, mondayItemUrl, mondayBoardUrl, COL, type Slice } from "@/lib/metrics";
-import { Page, PageHeader, Nav, KpiGrid, Kpi, Section, Grid, BarList, MondayLink, Pending, Empty, statusColor } from "@/components/ui";
+import { loadPaymentRisk, mondayItemUrl, type PayRisk } from "@/lib/metrics";
+import { Page, PageHeader, Nav, KpiGrid, Kpi, Section, MondayLink, Provenance } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
-const yearHref = (s: Slice) =>
-  `/dashboard/items?board=leases&col=${COL.leases.payDue}&mode=year&val=${encodeURIComponent(s.k)}&t=${encodeURIComponent(`Leases · payment due in ${s.k}`)}`;
+const MUTED = "#6b7280", PURPLE = "#7c3aed";
+const LEVELS = {
+  major: { label: "Major flag", color: "#dc2626", bg: "#fef2f2", border: "#fecaca", sub: "≤ 60 days" },
+  high: { label: "High alert", color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", sub: "≤ 80 days" },
+  notice: { label: "On notice", color: "#d97706", bg: "#fffbeb", border: "#fde68a", sub: "≤ 100 days" },
+} as const;
 
 export default async function Payments() {
   let slug: string, name: string;
-  try { const t = await currentTenant(); slug = t.slug; name = t.displayName; } catch { return <Page><p>Not authorized.</p></Page>; }
+  try { const t = await currentTenant(); slug = t.slug; name = t.displayName; } catch { return <Page><Nav active="payments" /><p>Not authorized.</p></Page>; }
 
-  const d = await loadPayments(slug);
+  const d = await loadPaymentRisk(slug);
 
   return (
     <Page>
       <Nav active="payments" />
-      <PageHeader
-        title={`${name} — Lease Payments`}
-        subtitle="Upcoming obligations and the cleared‑to‑pay gate"
-        right={<MondayLink href={mondayBoardUrl(slug, "leasePayments")} label="Open source in monday" />}
-      />
+      <PageHeader title={`${name} — Cleared to Pay`} subtitle="Leases with a payment due soon whose title isn't complete" right={<Provenance />} />
 
       <KpiGrid>
-        <Kpi label="Leases with a pay date" value={d.withDue} />
-        <Kpi label="Next payment due" value={d.upcoming[0]?.due || "—"} />
-        <Kpi label="Cleared to pay" value="—" sub="needs clearance wiring in monday" />
+        <Kpi label="Major flag · ≤60d" value={d.counts.major} />
+        <Kpi label="High alert · ≤80d" value={d.counts.high} />
+        <Kpi label="On notice · ≤100d" value={d.counts.notice} />
+        <Kpi label="Paying soon, title clear" value={d.clearSoon} sub="no action needed" />
       </KpiGrid>
 
-      <Grid>
-        <Section title="Payments due by year"><BarList items={d.byYear} accent="#22a06b" hrefFor={yearHref} /></Section>
-        <Section title="Lease Payments board status"><BarList items={d.boardStatus} color={statusColor} /></Section>
-      </Grid>
+      {d.flags.length === 0 ? (
+        <Section title="Payment risk"><p style={{ color: MUTED, fontSize: 13, margin: 0 }}>✓ No payments due within 100 days on incomplete title. {d.later} more lease payment(s) fall beyond 100 days.</p></Section>
+      ) : (
+        (["major", "high", "notice"] as const).map((level) => {
+          const items = d.flags.filter((f) => f.level === level);
+          if (!items.length) return null;
+          const L = LEVELS[level];
+          return (
+            <div key={level} style={{ marginBottom: 20 }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: L.color, margin: "0 0 10px" }}>
+                {L.label} · {L.sub} · {items.length}
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {items.map((f) => <FlagCard key={f.id} f={f} slug={slug} L={L} />)}
+              </div>
+            </div>
+          );
+        })
+      )}
 
-      <div style={{ height: 16 }} />
-      <Section title="Upcoming payments — by lease pay date">
-        {d.upcoming.length === 0 ? <Empty /> : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ textAlign: "left", color: "#6b7280", borderBottom: "2px solid #e7e9ee" }}>
-                <th style={th}>Lease</th><th style={th}>Lease ID</th><th style={th}>Type</th><th style={th}>Pay due</th><th style={th}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.upcoming.map((p) => (
-                <tr key={p.id} style={{ borderBottom: "1px solid #f0f1f4" }}>
-                  <td style={{ ...td, fontWeight: 500 }}>{p.name}</td>
-                  <td style={td}>{p.leaseId || "—"}</td>
-                  <td style={td}>{p.type || "—"}</td>
-                  <td style={td}>{p.due}</td>
-                  <td style={{ ...td, textAlign: "right" }}><MondayLink href={mondayItemUrl(slug, "leases", p.id)} label="Open lease ↗" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Section>
-
-      <div style={{ height: 16 }} />
-      <Pending note="Dollar amounts and the automated cleared‑to‑pay gate require the Lease Payments board (amount · payment type · payee · Title‑Clearance mirror) to be built out in monday — that's the wiring we paused to ship the portal. The pay dates above come straight from the executed leases." />
+      <p style={{ fontSize: 11.5, color: MUTED, marginTop: 24, lineHeight: 1.6 }}>
+        Pay dates roll to the next annual anniversary. Tracts are matched to a lease by <b>lessor name within the AOI</b> (Monday has no direct lease→tract link yet) —
+        where no tract matches, title shows as <i>unverified</i>. {d.later} payment(s) fall beyond 100 days; {d.clearSoon} pay soon on already‑clear title.
+      </p>
     </Page>
   );
 }
 
-const th = { padding: "8px 10px", fontWeight: 600, fontSize: 12 } as const;
-const td = { padding: "9px 10px", verticalAlign: "middle" } as const;
+function FlagCard({ f, slug, L }: { f: PayRisk; slug: string; L: { color: string; bg: string; border: string } }) {
+  return (
+    <div style={{ display: "flex", gap: 16, border: `1px solid ${L.border}`, background: L.bg, borderRadius: 10, padding: "13px 16px" }}>
+      <div style={{ flexShrink: 0, textAlign: "center", minWidth: 46 }}>
+        <div className="num" style={{ fontSize: 24, fontWeight: 800, color: L.color, lineHeight: 1 }}>{f.days}</div>
+        <div style={{ fontSize: 10, color: L.color, marginTop: 2 }}>days</div>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{f.lessor}</span>
+          <MondayLink href={mondayItemUrl(slug, "leases", f.id)} label="Lease ↗" />
+        </div>
+        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+          {f.name} · {f.leaseId || "no ID"} · {f.aoi} · pays <span className="num">{f.due}</span>
+        </div>
+        <div style={{ marginTop: 8, fontSize: 12 }}>
+          {f.titleState === "incomplete" ? (
+            <div>
+              <span style={{ color: "#dc2626", fontWeight: 600 }}>Title incomplete</span>
+              <span style={{ color: MUTED }}> on {f.tracts.length} matched tract{f.tracts.length === 1 ? "" : "s"}: </span>
+              {f.tracts.map((t, i) => (
+                <span key={t.id}>
+                  <a href={mondayItemUrl(slug, "tracts", t.id)} target="_blank" rel="noopener noreferrer" style={{ color: PURPLE, textDecoration: "none" }}>{t.name}</a>
+                  <span style={{ color: MUTED }}> ({t.title}){i < f.tracts.length - 1 ? ", " : ""}</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span style={{ color: MUTED }}>⚠ Title unverified — lessor not matched to a tract (needs lease↔tract link in Monday)</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

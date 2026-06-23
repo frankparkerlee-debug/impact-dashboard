@@ -27,7 +27,11 @@ export default async function Title() {
       </KpiGrid>
 
       <div style={{ marginBottom: 16 }}>
-        <Exception label="Leased, but title not yet cleared — lease in hand, title not clear" count={d.leasedNotCleared} />
+        <Exception
+          href={`/dashboard/items?q=leased-not-cleared&t=${encodeURIComponent("Leased — title not yet cleared")}`}
+          label="Leased, but title not yet cleared — lease in hand, title not clear"
+          count={d.leasedNotCleared}
+        />
       </div>
 
       <Grid>

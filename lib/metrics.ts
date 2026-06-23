@@ -30,6 +30,7 @@ export const COL = {
     area: "dropdown_mkthwqvk",
     leaseId: "text_mm44gmna",
     w9File: "file_mkv2nmm7",             // W9 attachment (empty = missing)
+    poc: "text_mm40304w",                // Point of Contact = lessor (≈ geothermal owner)
   },
   aoi: { status: "color_mm3z850g", state: "dropdown_mm3zmyzq", commodity: "dropdown_mm3za6sf", target: "numeric_mm3z4ttz" },
   curative: { status: "status" },
@@ -298,4 +299,89 @@ export async function loadMap(tenant: string, aoiInput?: string): Promise<MapDat
   }
   const townships = [...tmap.values()].sort((a, b) => b.tracts - a.tracts);
   return { aoi, aois, townships, tracts: rows, totals: totalsR ?? { tracts: 0, leased: 0, cleared: 0, titleDone: 0, severed: 0 } };
+}
+
+// ---- Named compound drill-downs (multi-condition filters the generic items route can't express) ----
+export const NAMED: Record<string, { board: BoardKey; label: string; where: string }> = {
+  "leased-not-cleared": { board: "tracts", label: "Leased — title not yet cleared", where: `${LEASED} AND NOT (${CLEARED})` },
+  "leased-no-w9": { board: "leases", label: "Executed leases missing a W‑9", where: `COALESCE(NULLIF(data->>'${COL.leases.w9File}',''),'')=''` },
+};
+export async function loadNamed(tenant: string, q: string): Promise<{ board: BoardKey; label: string; rows: ItemRow[] } | null> {
+  const n = NAMED[q]; if (!n) return null;
+  const r = await query<ItemRow>(`SELECT monday_item_id AS id, name, data FROM monday_items WHERE tenant=$1 AND board=$2 AND ${n.where} ORDER BY name LIMIT 500`, [tenant, n.board]);
+  return { board: n.board, label: n.label, rows: r.rows };
+}
+
+// ---- PAYMENT RISK: leases paying soon whose (owner-matched) tracts aren't title-complete ----
+type TR = { id: string; name: string; aoi: string; surf: string; geo: string; title: string };
+export interface PayRiskTract { id: string; name: string; title: string; done: boolean }
+export interface PayRisk {
+  id: string; name: string; lessor: string; aoi: string; leaseId: string;
+  due: string; days: number; level: "major" | "high" | "notice";
+  titleState: "incomplete" | "unknown"; tracts: PayRiskTract[];
+}
+const PAY_STOP = new Set(["llc", "inc", "trust", "trusts", "revocable", "family", "the", "and", "ranch", "properties", "property", "company", "ltd", "estate", "living", "trustee", "etal", "etux", "joint", "tenants"]);
+const ownerTokens = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length >= 4 && !PAY_STOP.has(w));
+function annivDays(due: string): { days: number; iso: string } | null {
+  const m = due && due.match(/(\d{4})-(\d{2})-(\d{2})/); if (!m) return null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  let d = new Date(now.getFullYear(), +m[2] - 1, +m[3]);
+  if (d.getTime() < now.getTime()) d = new Date(now.getFullYear() + 1, +m[2] - 1, +m[3]);
+  return { days: Math.round((d.getTime() - now.getTime()) / 864e5), iso: d.toISOString().slice(0, 10) };
+}
+
+export async function loadPaymentRisk(tenant: string) {
+  const [leasesR, tractsR] = await Promise.all([
+    query<{ id: string; name: string; poc: string; area: string; due: string; leaseId: string }>(
+      `SELECT monday_item_id id, name, COALESCE(data->>'${COL.leases.poc}','') poc, COALESCE(data->>'${COL.leases.area}','') area,
+              COALESCE(data->>'${COL.leases.payDue}','') due, COALESCE(data->>'${COL.leases.leaseId}','') "leaseId"
+         FROM monday_items WHERE tenant=$1 AND board='leases' AND COALESCE(data->>'${COL.leases.payDue}','')<>''`, [tenant]),
+    query<TR>(
+      `SELECT monday_item_id id, name, COALESCE(data->>'${COL.tracts.aoi}','') aoi,
+              COALESCE(data->>'${COL.tracts.surfaceOwner}','') surf, COALESCE(data->>'${COL.tracts.geoOwner}','') geo,
+              COALESCE(data->>'${COL.tracts.titleStatus}','—') title
+         FROM monday_items WHERE tenant=$1 AND board='tracts'`, [tenant]),
+  ]);
+
+  const idx = new Map<string, Map<string, TR[]>>();
+  for (const t of tractsR.rows) {
+    let m = idx.get(t.aoi); if (!m) { m = new Map(); idx.set(t.aoi, m); }
+    for (const own of [t.geo, t.surf]) for (const tk of ownerTokens(own)) {
+      const a = m.get(tk); if (a) a.push(t); else m.set(tk, [t]);
+    }
+  }
+  const matchTracts = (area: string, poc: string): TR[] => {
+    const seen = new Map<string, TR>();
+    const lt = ownerTokens(poc);
+    if (!lt.length) return [];
+    for (const [aoi, m] of idx) {
+      if (area && !aoi.toLowerCase().includes(area.toLowerCase())) continue;
+      for (const tk of lt) for (const t of (m.get(tk) ?? [])) seen.set(t.id, t);
+    }
+    return [...seen.values()];
+  };
+
+  const done = (t: { title: string }) => /done/i.test(t.title);
+  const flags: PayRisk[] = [];
+  let clearSoon = 0, later = 0;
+  for (const l of leasesR.rows) {
+    const a = annivDays(l.due); if (!a) continue;
+    if (a.days > 100) { later++; continue; }
+    const matched = matchTracts(l.area, l.poc);
+    const incomplete = matched.filter((t) => !done(t));
+    if (matched.length > 0 && incomplete.length === 0) { clearSoon++; continue; } // title is clear → not a risk
+    const level = a.days <= 60 ? "major" : a.days <= 80 ? "high" : "notice";
+    flags.push({
+      id: l.id, name: l.name, lessor: l.poc || "—", aoi: l.area || "—", leaseId: l.leaseId,
+      due: a.iso, days: a.days, level, titleState: matched.length === 0 ? "unknown" : "incomplete",
+      tracts: (incomplete.length ? incomplete : matched).slice(0, 8).map((t) => ({ id: t.id, name: t.name, title: t.title, done: done(t) })),
+    });
+  }
+  flags.sort((x, y) => x.days - y.days);
+  const counts = {
+    major: flags.filter((f) => f.level === "major").length,
+    high: flags.filter((f) => f.level === "high").length,
+    notice: flags.filter((f) => f.level === "notice").length,
+  };
+  return { flags, counts, clearSoon, later, totalPaying: leasesR.rows.length };
 }

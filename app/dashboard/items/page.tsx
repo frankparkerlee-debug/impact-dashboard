@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
-import { loadItems, mondayItemUrl, DISPLAY, type ItemMode } from "@/lib/metrics";
+import { loadItems, loadNamed, mondayItemUrl, DISPLAY, type ItemMode, type ItemRow } from "@/lib/metrics";
 import type { BoardKey } from "@/lib/tenants";
 import { Page, PageHeader, Section, MondayLink, Pill, Empty } from "@/components/ui";
 
@@ -8,22 +8,26 @@ export const dynamic = "force-dynamic";
 
 export default async function Items({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const board = sp.board ?? "";
-  const col = sp.col ?? "";
-  const val = sp.val ?? "";
-  const mode: ItemMode = sp.mode === "year" ? "year" : sp.mode === "empty" ? "empty" : "eq";
-  const title = sp.t ?? "Items";
-
   let tenantSlug: string;
   try { tenantSlug = (await currentTenant()).slug; } catch { return <Page><p>Not authorized.</p></Page>; }
 
-  const rows = await loadItems(tenantSlug, board, col, val, mode);
+  let board: string, rows: ItemRow[], title: string;
+  if (sp.q) {
+    const named = await loadNamed(tenantSlug, sp.q);
+    if (!named) return <Page><p>Unknown view.</p></Page>;
+    board = named.board; rows = named.rows; title = sp.t ?? named.label;
+  } else {
+    board = sp.board ?? "";
+    const mode: ItemMode = sp.mode === "year" ? "year" : sp.mode === "empty" ? "empty" : "eq";
+    rows = await loadItems(tenantSlug, board, sp.col ?? "", sp.val ?? "", mode);
+    title = sp.t ?? "Items";
+  }
   const cols = DISPLAY[board] ?? [];
   const asPill = (label: string) => /status|clearance|type|w-9/i.test(label);
 
   return (
     <Page>
-      <Link href="/dashboard" style={{ color: "#0B5FFF", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>‹ Back to overview</Link>
+      <Link href="/dashboard" style={{ color: "#2563eb", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>‹ Back to overview</Link>
       <div style={{ height: 12 }} />
       <PageHeader title={title} subtitle={`${rows.length} item${rows.length === 1 ? "" : "s"}`} />
       <Section title="Items">
