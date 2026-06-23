@@ -74,7 +74,14 @@ export default async function Dashboard() {
 }
 
 function msg(e: unknown): string {
-  return e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  if (e instanceof AggregateError) {
+    const subs = e.errors.map((x) =>
+      x instanceof Error ? `${(x as { code?: string }).code ?? x.name}: ${x.message}` : String(x)
+    );
+    return "Connection attempts all failed:\n" + (subs.join("\n") || "(no detail)");
+  }
+  if (e instanceof Error) return `${(e as { code?: string }).code ?? e.name}: ${e.message}`;
+  return String(e);
 }
 
 const wrap = { maxWidth: 900, margin: "5vh auto", padding: 24 } as const;
