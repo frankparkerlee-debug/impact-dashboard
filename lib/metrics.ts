@@ -6,8 +6,11 @@ const MONDAY_HOST = "impactland.monday.com";
 // monday column IDs per board (verified against the live boards).
 export const COL = {
   tracts: {
-    titleStatus: "color",           // "Done" / "Incomplete" ...
-    titleClearance: "color_mm3zs055", // "cleared to pay" gate
+    titleStatus: "color",                // "Done" / "Incomplete" ...
+    titleClearance: "color_mm3zs055",    // "cleared to pay" gate
+    titleClassification: "color_mm3zbrme",
+    docsOutstanding: "color_mm3zff25",   // what's blocking title
+    estateSplit: "color_mm3z1rsj",       // single / surface≠geo / fractional
     leasingStatus: "status8",
     county: "text",
     taxAcres: "numbers",
@@ -20,10 +23,11 @@ export const COL = {
     payDue: "date_mm48rjtd",
     area: "dropdown_mkthwqvk",
     leaseId: "text_mm44gmna",
+    w9File: "file_mkv2nmm7",             // W9 attachment (empty = missing)
   },
   aoi: { status: "color_mm3z850g", state: "dropdown_mm3zmyzq", commodity: "dropdown_mm3za6sf", target: "numeric_mm3z4ttz" },
   curative: { status: "status" },
-  leads: { status: "status" },
+  leads: { status: "status", nda: "color_mm404z3r" },
   owners: { w9: "color_mm40trfy" },
   payments: { status: "status" },
 } as const;
@@ -137,12 +141,17 @@ export async function loadAoi(tenantSlug: string, aoi: string) {
 
 // Generic drill-down: every chart bucket links here.
 export interface ItemRow { id: string; name: string; data: Record<string, string | null> }
-export async function loadItems(tenant: string, board: string, col: string, val: string, mode: "eq" | "year"): Promise<ItemRow[]> {
-  const filter = mode === "year" ? `substring(data ->> $3 from '\\d{4}') = $4` : `COALESCE(NULLIF(data ->> $3, ''), '—') = $4`;
+export type ItemMode = "eq" | "year" | "empty";
+export async function loadItems(tenant: string, board: string, col: string, val: string, mode: ItemMode): Promise<ItemRow[]> {
+  let filter: string;
+  let params: unknown[];
+  if (mode === "empty") { filter = `COALESCE(NULLIF(data ->> $3, ''), '') = ''`; params = [tenant, board, col]; }
+  else if (mode === "year") { filter = `substring(data ->> $3 from '\\d{4}') = $4`; params = [tenant, board, col, val]; }
+  else { filter = `COALESCE(NULLIF(data ->> $3, ''), '—') = $4`; params = [tenant, board, col, val]; }
   const r = await query<ItemRow>(
     `SELECT monday_item_id AS id, name, data FROM monday_items
       WHERE tenant=$1 AND board=$2 AND ${filter}
-      ORDER BY name LIMIT 500`, [tenant, board, col, val]);
+      ORDER BY name LIMIT 500`, params);
   return r.rows;
 }
 
@@ -160,4 +169,56 @@ export async function loadPayments(tenant: string) {
     query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='leases' AND COALESCE(data->>'${COL.leases.payDue}','')<>''`, [tenant]),
   ]);
   return { byYear: byYear.rows, upcoming: upcoming.rows, boardStatus, withDue: withDueR.rows[0]?.n ?? 0 };
+}
+
+// ---- LEASING lens: throughput, contact pipeline, site readiness, W9 exception ----
+export async function loadLeasing(tenant: string) {
+  const t = tenant;
+  const [aoiR, leadStatus, nda, expirations, w9Missing, execLeases, leads, tractsR] = await Promise.all([
+    query<{ aoi: string; tracts: number; leased: number }>(
+      `SELECT COALESCE(NULLIF(data->>'${COL.tracts.aoi}',''),'Unassigned') aoi, count(*)::int tracts, count(*) FILTER (WHERE ${LEASED})::int leased
+         FROM monday_items WHERE tenant=$1 AND board='tracts' GROUP BY 1 ORDER BY tracts DESC`, [t]),
+    breakdown(t, "leads", COL.leads.status),
+    breakdown(t, "leads", COL.leads.nda),
+    query<{ k: string; n: number }>(`SELECT COALESCE(substring(data->>'${COL.leases.expiration}' from '\\d{4}'),'—') k, count(*)::int n FROM monday_items WHERE tenant=$1 AND board='leases' GROUP BY 1 ORDER BY k`, [t]),
+    query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='leases' AND COALESCE(NULLIF(data->>'${COL.leases.w9File}',''),'')=''`, [t]),
+    query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='leases'`, [t]),
+    query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='leads'`, [t]),
+    query<{ tracts: number; leased: number }>(`SELECT count(*)::int tracts, count(*) FILTER (WHERE ${LEASED})::int leased FROM monday_items WHERE tenant=$1 AND board='tracts'`, [t]),
+  ]);
+  return {
+    aoiReadiness: aoiR.rows,
+    leadPipeline: leadStatus,
+    ndaStatus: nda,
+    expirations: expirations.rows,
+    leasesMissingW9: w9Missing.rows[0]?.n ?? 0,
+    execLeases: execLeases.rows[0]?.n ?? 0,
+    leads: leads.rows[0]?.n ?? 0,
+    tracts: tractsR.rows[0]?.tracts ?? 0,
+    leasedTracts: tractsR.rows[0]?.leased ?? 0,
+  };
+}
+
+// ---- TITLE lens: title status, clearance gate, classification, blockers, breaks ----
+export async function loadTitle(tenant: string) {
+  const t = tenant;
+  const [titleStatus, clearance, classification, docs, estate, curative, leasedNotCleared, tractsR, cureCount] = await Promise.all([
+    breakdown(t, "tracts", COL.tracts.titleStatus),
+    breakdown(t, "tracts", COL.tracts.titleClearance),
+    breakdown(t, "tracts", COL.tracts.titleClassification),
+    breakdown(t, "tracts", COL.tracts.docsOutstanding),
+    breakdown(t, "tracts", COL.tracts.estateSplit),
+    breakdown(t, "curative", COL.curative.status),
+    query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='tracts' AND ${LEASED} AND NOT (${CLEARED})`, [t]),
+    query<{ tracts: number; complete: number; cleared: number }>(`SELECT count(*)::int tracts, count(*) FILTER (WHERE ${DONE})::int complete, count(*) FILTER (WHERE ${CLEARED})::int cleared FROM monday_items WHERE tenant=$1 AND board='tracts'`, [t]),
+    query<{ n: number }>(`SELECT count(*)::int n FROM monday_items WHERE tenant=$1 AND board='curative'`, [t]),
+  ]);
+  return {
+    titleStatus, clearance, classification, docs, estate, curative,
+    leasedNotCleared: leasedNotCleared.rows[0]?.n ?? 0,
+    tracts: tractsR.rows[0]?.tracts ?? 0,
+    complete: tractsR.rows[0]?.complete ?? 0,
+    cleared: tractsR.rows[0]?.cleared ?? 0,
+    curativeCount: cureCount.rows[0]?.n ?? 0,
+  };
 }

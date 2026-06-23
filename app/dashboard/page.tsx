@@ -1,18 +1,11 @@
 import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
 import { refresh } from "./actions";
-import { loadOverview, mondayBoardUrl, COL, type Slice } from "@/lib/metrics";
+import { loadOverview, mondayBoardUrl } from "@/lib/metrics";
 import type { Tenant } from "@/lib/tenants";
-import {
-  Page, PageHeader, KpiGrid, Kpi, Section, Grid, BarList, AoiProgressRow,
-  MondayLink, Pending, statusColor, Empty,
-} from "@/components/ui";
+import { Page, PageHeader, Nav, KpiGrid, Kpi, Section, Grid, AoiProgressRow, MondayLink, Empty } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
-
-// Build a drill-down link for a chart bucket.
-const href = (board: string, col: string, mode: "eq" | "year", prefix: string) => (s: Slice) =>
-  `/dashboard/items?board=${board}&col=${col}&mode=${mode}&val=${encodeURIComponent(s.k)}&t=${encodeURIComponent(`${prefix}: ${s.k}`)}`;
 
 export default async function Dashboard() {
   let tenant: Tenant;
@@ -34,15 +27,13 @@ export default async function Dashboard() {
 
   return (
     <Page>
+      <Nav active="overview" />
       <PageHeader
         title={`${tenant.displayName} — Leasing & Title Progress`}
         subtitle={`Prepared by Impact Land Services${d.syncedAt ? ` · data as of ${d.syncedAt}` : ""}`}
         right={
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <form action={refresh}>
-              <button type="submit" style={{ background: "#fff", border: "1px solid #d7dbe3", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#0e1726", cursor: "pointer" }}>↻ Refresh data</button>
-            </form>
-            <Link href="/dashboard/payments" style={{ color: "#0B5FFF", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>Payments →</Link>
+            <form action={refresh}><button type="submit" style={refreshBtn}>↻ Refresh data</button></form>
             <MondayLink href={mondayBoardUrl(tenant.slug, "tracts")} label="Open source in monday" />
           </div>
         }
@@ -50,40 +41,43 @@ export default async function Dashboard() {
 
       <KpiGrid>
         <Kpi label="Areas of Interest" value={d.counts.aoi ?? 0} />
-        <Kpi label="Tracts" value={tracts.toLocaleString()} sub={tracts >= 500 ? "500+ (sync cap)" : undefined} />
+        <Kpi label="Tracts" value={tracts.toLocaleString()} />
         <Kpi label="Tax acres" value={d.totalAcres.toLocaleString()} />
         <Kpi label="Executed leases" value={d.counts.leases ?? 0} />
-        <Kpi label="Title work complete" value={`${pct(d.titleComplete)}%`} sub={`${d.titleComplete} of ${tracts} tracts`} />
-        <Kpi label="Cleared to pay" value={`${pct(d.clearedToPay)}%`} sub={`${d.clearedToPay} tracts · the payment gate`} />
+        <Kpi label="Title work complete" value={`${pct(d.titleComplete)}%`} sub={`${d.titleComplete} of ${tracts}`} />
+        <Kpi label="Cleared to pay" value={`${pct(d.clearedToPay)}%`} sub={`${d.clearedToPay} tracts`} />
       </KpiGrid>
 
       <div style={{ marginBottom: 16 }}>
         <Section title="Progress by Area of Interest">
           {d.aoiRows.length === 0 ? <Empty /> : (
-            <div>
-              {d.aoiRows.map((r) => (
-                <AoiProgressRow key={r.aoi} href={`/dashboard/aoi/${encodeURIComponent(r.aoi)}`} name={r.aoi} tracts={r.tracts} leased={r.leased} titleComplete={r.titleComplete} />
-              ))}
-            </div>
+            <div>{d.aoiRows.map((r) => (
+              <AoiProgressRow key={r.aoi} href={`/dashboard/aoi/${encodeURIComponent(r.aoi)}`} name={r.aoi} tracts={r.tracts} leased={r.leased} titleComplete={r.titleComplete} />
+            ))}</div>
           )}
         </Section>
       </div>
 
       <Grid>
-        <Section title="Title status"><BarList items={d.titleStatus} color={statusColor} hrefFor={href("tracts", COL.tracts.titleStatus, "eq", "Tracts · Title status")} /></Section>
-        <Section title="Title clearance"><BarList items={d.clearance} color={statusColor} hrefFor={href("tracts", COL.tracts.titleClearance, "eq", "Tracts · Clearance")} /></Section>
-        <Section title="Leases by type"><BarList items={d.leaseType} hrefFor={href("leases", COL.leases.type, "eq", "Leases · Type")} /></Section>
-        <Section title="Leases by status"><BarList items={d.leaseStatus} color={statusColor} hrefFor={href("leases", COL.leases.status, "eq", "Leases · Status")} /></Section>
-        <Section title="Lease expirations by year"><BarList items={d.expirations} accent="#9b51e0" hrefFor={href("leases", COL.leases.expiration, "year", "Leases expiring")} /></Section>
-        <Section title="Curative items"><BarList items={d.curative} color={statusColor} hrefFor={href("curative", COL.curative.status, "eq", "Curative · Status")} /></Section>
-        <Section title="Owner W‑9 status"><BarList items={d.ownersW9} color={statusColor} hrefFor={href("landOwners", COL.owners.w9, "eq", "Owners · W‑9")} /></Section>
-        <Section title="Payments / cleared‑to‑pay">
-          <Pending note="Open the Payments view → for upcoming pay dates. Amounts + the automated cleared‑to‑pay gate light up once the Lease Payments board is wired in monday." />
-        </Section>
+        <LensCard href="/dashboard/leasing" title="Leasing →" accent="#0B5FFF"
+          desc="Pipeline & contact status, executed‑lease throughput, site readiness by AOI, and the W‑9 exceptions that need action." />
+        <LensCard href="/dashboard/title" title="Title →" accent="#22a06b"
+          desc="Title status & cleared‑to‑pay, classification, docs outstanding, estate splits (who owns what), and curative breaks." />
       </Grid>
     </Page>
   );
 }
+
+function LensCard({ href, title, desc, accent }: { href: string; title: string; desc: string; accent: string }) {
+  return (
+    <Link href={href} className="row-link" style={{ display: "block", padding: 22, background: "#fff", border: "1px solid #e7e9ee", borderRadius: 12, textDecoration: "none", color: "#0e1726", borderTop: `3px solid ${accent}` }}>
+      <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 13.5, color: "#6b7280", lineHeight: 1.5 }}>{desc}</div>
+    </Link>
+  );
+}
+
+const refreshBtn = { background: "#fff", border: "1px solid #d7dbe3", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#0e1726", cursor: "pointer" } as const;
 
 function msg(e: unknown): string {
   if (e instanceof AggregateError) {

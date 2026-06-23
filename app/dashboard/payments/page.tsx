@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
 import { loadPayments, mondayItemUrl, mondayBoardUrl, COL, type Slice } from "@/lib/metrics";
-import { Page, PageHeader, KpiGrid, Kpi, Section, Grid, BarList, MondayLink, Pending, Empty, statusColor } from "@/components/ui";
+import { Page, PageHeader, Nav, KpiGrid, Kpi, Section, Grid, BarList, MondayLink, Pending, Empty, statusColor } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +16,7 @@ export default async function Payments() {
 
   return (
     <Page>
-      <Link href="/dashboard" style={{ color: "#0B5FFF", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>‹ Back to overview</Link>
-      <div style={{ height: 12 }} />
+      <Nav active="payments" />
       <PageHeader
         title={`${name} — Lease Payments`}
         subtitle="Upcoming obligations and the cleared‑to‑pay gate"

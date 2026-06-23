@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
-import { loadItems, mondayItemUrl, DISPLAY } from "@/lib/metrics";
+import { loadItems, mondayItemUrl, DISPLAY, type ItemMode } from "@/lib/metrics";
 import type { BoardKey } from "@/lib/tenants";
 import { Page, PageHeader, Section, MondayLink, Pill, Empty } from "@/components/ui";
 
@@ -11,7 +11,7 @@ export default async function Items({ searchParams }: { searchParams: Promise<Re
   const board = sp.board ?? "";
   const col = sp.col ?? "";
   const val = sp.val ?? "";
-  const mode: "eq" | "year" = sp.mode === "year" ? "year" : "eq";
+  const mode: ItemMode = sp.mode === "year" ? "year" : sp.mode === "empty" ? "empty" : "eq";
   const title = sp.t ?? "Items";
 
   let tenantSlug: string;

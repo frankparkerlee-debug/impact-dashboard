@@ -153,4 +153,42 @@ export function Pending({ note }: { note: string }) {
   );
 }
 
+export function Nav({ active }: { active: "overview" | "leasing" | "title" | "payments" }) {
+  const items = [
+    { key: "overview", label: "Overview", href: "/dashboard" },
+    { key: "leasing", label: "Leasing", href: "/dashboard/leasing" },
+    { key: "title", label: "Title", href: "/dashboard/title" },
+    { key: "payments", label: "Payments", href: "/dashboard/payments" },
+  ] as const;
+  return (
+    <nav style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: `1px solid ${LINE}`, paddingBottom: 0 }}>
+      {items.map((it) => (
+        <Link key={it.key} href={it.href} style={{
+          fontSize: 13.5, fontWeight: 600, padding: "8px 14px", textDecoration: "none",
+          color: active === it.key ? INK : MUTED,
+          borderBottom: `2px solid ${active === it.key ? ACCENT : "transparent"}`,
+          marginBottom: -1,
+        }}>{it.label}</Link>
+      ))}
+    </nav>
+  );
+}
+
+export function Exception({ href, label, count }: { href?: string; label: string; count: number }) {
+  const bad = count > 0;
+  const c = bad ? "#c0392b" : "#22a06b";
+  const style: CSSProperties = {
+    display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px",
+    border: `1px solid ${bad ? "#f1cfcf" : "#cfe9db"}`, background: bad ? "#fdf4f4" : "#f3fbf6",
+    borderRadius: 10, textDecoration: "none", color: INK,
+  };
+  const inner = (
+    <>
+      <span style={{ fontWeight: 600, fontSize: 14 }}>{bad ? "⚠" : "✓"} {label}</span>
+      <span style={{ fontWeight: 700, fontSize: 18, color: c }}>{count}{href ? " ›" : ""}</span>
+    </>
+  );
+  return href ? <Link href={href} className="row-link" style={style}>{inner}</Link> : <div style={style}>{inner}</div>;
+}
+
 const card: CSSProperties = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: 18, boxShadow: "0 1px 2px rgba(16,23,38,0.04)" };
