@@ -1,10 +1,8 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
-const disp = Fraunces({ subsets: ["latin"], variable: "--font-disp", weight: ["400", "500", "600"], style: ["normal"] });
-const sans = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600"] });
-const mono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500", "600"] });
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata = {
   title: "Impact Land Services — Client Portal",
@@ -14,16 +12,15 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${disp.variable} ${sans.variable} ${mono.variable}`}>
-        <body style={{ fontFamily: "var(--font-sans), system-ui, sans-serif", margin: 0, color: "#1B1A16", background: "#F4F1E9" }}>
+      <html lang="en" className={sans.variable}>
+        <body style={{ fontFamily: "var(--font-sans), system-ui, -apple-system, sans-serif", margin: 0, color: "#111827", background: "#ffffff", WebkitFontSmoothing: "antialiased" }}>
           <style>{`
             *{box-sizing:border-box}
-            .mono{font-family:var(--font-mono),ui-monospace,monospace;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-            .disp{font-family:var(--font-disp),Georgia,serif}
-            .row-link{transition:background .08s ease}
-            .row-link:hover{background:#efe9da}
+            .num{font-variant-numeric:tabular-nums}
+            .row-link{transition:background .1s ease}
+            .row-link:hover{background:#f9fafb}
             a{color:inherit}
-            ::selection{background:#1F3F66;color:#F4F1E9}
+            ::selection{background:#dbeafe}
           `}</style>
           {children}
         </body>
