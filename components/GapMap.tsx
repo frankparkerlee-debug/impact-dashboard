@@ -28,9 +28,9 @@ function cellColor(layer: Layer, agg: MapSectionAgg | undefined, severed: number
     return { bg: RED, fg: "#fff" };
   }
   if (layer === "title") {
-    if (agg.cleared === agg.tracts) return { bg: GREEN, fg: "#fff" };
-    if (agg.cleared > 0) return { bg: AMBER, fg: "#fff" };
-    return { bg: "#e5e7eb", fg: INK };
+    if (agg.titleDone === agg.tracts) return { bg: GREEN, fg: "#fff" };
+    if (agg.titleDone > 0) return { bg: AMBER, fg: "#fff" };
+    return { bg: "#94a3b8", fg: "#fff" };
   }
   return severed > 0 ? { bg: PURPLE, fg: "#fff" } : { bg: "#e5e7eb", fg: MUTED };
 }
@@ -81,7 +81,7 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
         <div style={{ display: "flex", gap: 20, fontSize: 13, color: MUTED }}>
           <Stat label="Tracts" value={data.totals.tracts} />
           <Stat label="Leased" value={`${data.totals.leased} · ${pct(data.totals.leased)}%`} c={GREEN} />
-          <Stat label="Cleared to pay" value={`${data.totals.cleared} · ${pct(data.totals.cleared)}%`} c={data.totals.cleared ? GREEN : RED} />
+          <Stat label="Title complete" value={`${data.totals.titleDone} · ${pct(data.totals.titleDone)}%`} c={GREEN} />
           <Stat label="Geo estate severed" value={data.totals.severed} c={PURPLE} />
         </div>
         <div style={{ display: "flex", gap: 0, border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden" }}>
@@ -221,6 +221,6 @@ function Tag({ text }: { text: string }) {
 }
 function legend(layer: Layer) {
   if (layer === "leasing") return [{ c: GREEN, label: "Fully leased" }, { c: AMBER, label: "Partial" }, { c: RED, label: "Holdout (0 leased)" }, { c: EMPTY, label: "No tracts" }];
-  if (layer === "title") return [{ c: GREEN, label: "Cleared to pay" }, { c: AMBER, label: "Partial" }, { c: "#e5e7eb", label: "Not cleared" }, { c: EMPTY, label: "No tracts" }];
+  if (layer === "title") return [{ c: GREEN, label: "Title complete" }, { c: AMBER, label: "Partial" }, { c: "#94a3b8", label: "Not complete" }, { c: EMPTY, label: "No tracts" }];
   return [{ c: PURPLE, label: "Geothermal severed from surface" }, { c: "#e5e7eb", label: "Single estate" }, { c: EMPTY, label: "No tracts" }];
 }

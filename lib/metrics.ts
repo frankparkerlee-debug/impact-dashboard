@@ -248,6 +248,8 @@ export interface MapData {
 const C = COL.tracts;
 // geothermal estate severed from surface (different owner, geo owner present)
 const SEVERED = `(NULLIF(data->>'${C.surfaceOwner}','') IS DISTINCT FROM NULLIF(data->>'${C.geoOwner}','') AND COALESCE(data->>'${C.geoOwner}','')<>'')`;
+// title work complete = "Done" or "Cursory Done (Archive)"; LIKE '%done%' excludes "Incomplete"
+const TITLE_DONE = `lower(COALESCE(data->>'${C.titleStatus}','')) LIKE '%done%'`;
 
 export async function loadMap(tenant: string, aoiInput?: string): Promise<MapData> {
   const aois = (await query<Slice>(
@@ -275,7 +277,7 @@ export async function loadMap(tenant: string, aoiInput?: string): Promise<MapDat
     `SELECT count(*)::int tracts,
             count(*) FILTER (WHERE ${LEASED})::int leased,
             count(*) FILTER (WHERE ${CLEARED})::int cleared,
-            count(*) FILTER (WHERE ${DONE})::int "titleDone",
+            count(*) FILTER (WHERE ${TITLE_DONE})::int "titleDone",
             count(*) FILTER (WHERE ${SEVERED})::int severed
        FROM monday_items WHERE ${where}`, [tenant, like])).rows[0];
 
@@ -292,7 +294,7 @@ export async function loadMap(tenant: string, aoiInput?: string): Promise<MapDat
     s.tracts++;
     s.leased += leased;
     if (/cleared/i.test(r.clearance)) s.cleared++;
-    if (/done|complete/i.test(r.title)) s.titleDone++;
+    if (/done/i.test(r.title)) s.titleDone++;
   }
   const townships = [...tmap.values()].sort((a, b) => b.tracts - a.tracts);
   return { aoi, aois, townships, tracts: rows, totals: totalsR ?? { tracts: 0, leased: 0, cleared: 0, titleDone: 0, severed: 0 } };
