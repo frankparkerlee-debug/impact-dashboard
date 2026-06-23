@@ -32,24 +32,29 @@ export async function mondayGraphQL<T>(
 export interface MondayItem {
   id: string;
   name: string;
-  column_values: { id: string; text: string | null; value: string | null }[];
+  column_values: { id: string; text: string | null }[];
 }
 
 /**
- * Fetch a tenant's board items. Isolation: callers pass a board KEY and we only
- * ever read that tenant's configured board id — a tenant can't address another's board.
+ * Fetch ALL of a tenant's board items (paginated). Isolation: callers pass a board KEY
+ * and we only ever read that tenant's configured board id.
  */
 export async function getBoardItems(tenant: Tenant, board: BoardKey): Promise<MondayItem[]> {
   const boardId = tenant.monday.boards[board];
-  const data = await mondayGraphQL<{ boards: { items_page: { items: MondayItem[] } }[] }>(
-    `query ($ids: [ID!]) {
-       boards(ids: $ids) {
-         items_page(limit: 500) {
-           items { id name column_values { id text value } }
-         }
-       }
-     }`,
+  const out: MondayItem[] = [];
+  const first = await mondayGraphQL<{ boards: { items_page: { cursor: string | null; items: MondayItem[] } }[] }>(
+    `query ($ids: [ID!]) { boards(ids: $ids) { items_page(limit: 100) { cursor items { id name column_values { id text } } } } }`,
     { ids: [boardId] }
   );
-  return data.boards?.[0]?.items_page?.items ?? [];
+  let page = first.boards?.[0]?.items_page ?? null;
+  while (page) {
+    out.push(...page.items);
+    if (!page.cursor) break;
+    const next = await mondayGraphQL<{ next_items_page: { cursor: string | null; items: MondayItem[] } }>(
+      `query ($c: String!) { next_items_page(limit: 100, cursor: $c) { cursor items { id name column_values { id text } } } }`,
+      { c: page.cursor }
+    );
+    page = next.next_items_page ?? null;
+  }
+  return out;
 }

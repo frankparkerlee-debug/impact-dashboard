@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { currentTenant } from "@/lib/auth";
+import { refresh } from "./actions";
 import { loadOverview, mondayBoardUrl, COL, type Slice } from "@/lib/metrics";
 import type { Tenant } from "@/lib/tenants";
 import {
@@ -38,6 +39,9 @@ export default async function Dashboard() {
         subtitle={`Prepared by Impact Land Services${d.syncedAt ? ` · data as of ${d.syncedAt}` : ""}`}
         right={
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <form action={refresh}>
+              <button type="submit" style={{ background: "#fff", border: "1px solid #d7dbe3", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#0e1726", cursor: "pointer" }}>↻ Refresh data</button>
+            </form>
             <Link href="/dashboard/payments" style={{ color: "#0B5FFF", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>Payments →</Link>
             <MondayLink href={mondayBoardUrl(tenant.slug, "tracts")} label="Open source in monday" />
           </div>
