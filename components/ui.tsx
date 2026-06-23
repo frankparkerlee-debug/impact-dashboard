@@ -59,22 +59,33 @@ export function Grid({ children }: { children: ReactNode }) {
   return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>{children}</div>;
 }
 
-export function BarList({ items, accent = ACCENT, color }: { items: Slice[]; accent?: string; color?: (k: string, i: number) => string }) {
+export function BarList({
+  items, accent = ACCENT, color, hrefFor,
+}: {
+  items: Slice[]; accent?: string; color?: (k: string, i: number) => string; hrefFor?: (s: Slice) => string;
+}) {
   const max = Math.max(1, ...items.map((s) => s.n));
   if (items.length === 0) return <Empty />;
+  const rowStyle: CSSProperties = { display: "grid", gridTemplateColumns: "130px 1fr 42px 10px", alignItems: "center", gap: 10, padding: "3px 4px", borderRadius: 6, textDecoration: "none", color: INK };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {items.map((s, i) => (
-        <div key={s.k} style={{ display: "grid", gridTemplateColumns: "130px 1fr 42px", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 13, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={s.k}>
-            {s.k}
-          </span>
-          <span style={{ background: "#f1f3f7", borderRadius: 6, height: 18, overflow: "hidden" }}>
-            <span style={{ display: "block", height: "100%", width: `${(s.n / max) * 100}%`, background: color ? color(s.k, i) : accent, borderRadius: 6 }} />
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, textAlign: "right" }}>{s.n}</span>
-        </div>
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {items.map((s, i) => {
+        const inner = (
+          <>
+            <span style={{ fontSize: 13, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={s.k}>{s.k}</span>
+            <span style={{ background: "#f1f3f7", borderRadius: 6, height: 18, overflow: "hidden" }}>
+              <span style={{ display: "block", height: "100%", width: `${(s.n / max) * 100}%`, background: color ? color(s.k, i) : accent, borderRadius: 6 }} />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, textAlign: "right" }}>{s.n}</span>
+            <span style={{ color: hrefFor ? "#9aa3b2" : "transparent", fontSize: 13, textAlign: "right" }}>›</span>
+          </>
+        );
+        return hrefFor ? (
+          <Link key={s.k} href={hrefFor(s)} className="row-link" style={rowStyle}>{inner}</Link>
+        ) : (
+          <div key={s.k} style={rowStyle}>{inner}</div>
+        );
+      })}
     </div>
   );
 }
@@ -104,13 +115,13 @@ export function Pill({ text }: { text: string }) {
   );
 }
 
-export function AoiProgressRow({ href, name, tracts, leased, titleCleared }: { href: string; name: string; tracts: number; leased: number; titleCleared: number }) {
+export function AoiProgressRow({ href, name, tracts, leased, titleComplete }: { href: string; name: string; tracts: number; leased: number; titleComplete: number }) {
   const pct = (n: number) => (tracts ? Math.round((n / tracts) * 100) : 0);
   return (
-    <Link href={href} style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr 70px", gap: 16, alignItems: "center", padding: "12px 8px", borderRadius: 8, textDecoration: "none", color: INK, borderBottom: `1px solid ${LINE}` }}>
+    <Link href={href} className="row-link" style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr 70px", gap: 16, alignItems: "center", padding: "12px 8px", borderRadius: 8, textDecoration: "none", color: INK, borderBottom: `1px solid ${LINE}` }}>
       <span style={{ fontWeight: 600, fontSize: 14 }}>{name}</span>
       <Meter label="Leased" pct={pct(leased)} color="#0B5FFF" />
-      <Meter label="Title cleared" pct={pct(titleCleared)} color="#22a06b" />
+      <Meter label="Title complete" pct={pct(titleComplete)} color="#22a06b" />
       <span style={{ textAlign: "right", color: MUTED, fontSize: 13 }}>{tracts} tracts ›</span>
     </Link>
   );
