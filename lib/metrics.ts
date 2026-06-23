@@ -15,6 +15,12 @@ export const COL = {
     county: "text",
     taxAcres: "numbers",
     aoi: "board_relation_mm3zpnvn",
+    township: "text5",                   // PLSS township, e.g. 27S
+    range: "text9",                      // PLSS range, e.g. 10W
+    section: "text04",                   // PLSS section 1-36
+    surfaceOwner: "text2",
+    geoOwner: "text51",                  // geothermal estate owner (may differ = severed)
+    mineralOwner: "text3",
   },
   leases: {
     status: "status",
@@ -221,4 +227,73 @@ export async function loadTitle(tenant: string) {
     cleared: tractsR.rows[0]?.cleared ?? 0,
     curativeCount: cureCount.rows[0]?.n ?? 0,
   };
+}
+
+// ---- GAP MAP: PLSS section grid by AOI, leasing + title layers, estate severance ----
+export interface MapTract {
+  id: string; name: string; twp: string; sec: number;
+  leasing: string; title: string; clearance: string;
+  surface: string; geo: string; mineral: string; split: string;
+}
+export interface MapSectionAgg { sec: number; tracts: number; leased: number; cleared: number; titleDone: number }
+export interface MapTownship { twp: string; tracts: number; leased: number; sections: MapSectionAgg[] }
+export interface MapData {
+  aoi: string;
+  aois: Slice[];
+  townships: MapTownship[];
+  tracts: MapTract[];
+  totals: { tracts: number; leased: number; cleared: number; titleDone: number; severed: number };
+}
+
+const C = COL.tracts;
+// geothermal estate severed from surface (different owner, geo owner present)
+const SEVERED = `(NULLIF(data->>'${C.surfaceOwner}','') IS DISTINCT FROM NULLIF(data->>'${C.geoOwner}','') AND COALESCE(data->>'${C.geoOwner}','')<>'')`;
+
+export async function loadMap(tenant: string, aoiInput?: string): Promise<MapData> {
+  const aois = (await query<Slice>(
+    `SELECT trim(a) k, count(*)::int n
+       FROM monday_items, regexp_split_to_table(COALESCE(NULLIF(data->>'${C.aoi}',''),'Unassigned'), ',') a
+      WHERE tenant=$1 AND board='tracts' GROUP BY 1 ORDER BY 2 DESC`, [tenant])).rows;
+  const aoi = aoiInput && aois.some((a) => a.k === aoiInput) ? aoiInput : (aois[0]?.k ?? "Unassigned");
+  const where = `tenant=$1 AND board='tracts' AND COALESCE(NULLIF(data->>'${C.aoi}',''),'Unassigned') ILIKE $2`;
+  const like = `%${aoi}%`;
+
+  const rows = (await query<MapTract>(
+    `SELECT monday_item_id id, name,
+            COALESCE(NULLIF(data->>'${C.township}',''),'?')||' '||COALESCE(NULLIF(data->>'${C.range}',''),'?') twp,
+            COALESCE(NULLIF(regexp_replace(COALESCE(data->>'${C.section}',''),'[^0-9]','','g'),'')::int,0) sec,
+            COALESCE(NULLIF(data->>'${C.leasingStatus}',''),'—') leasing,
+            COALESCE(NULLIF(data->>'${C.titleStatus}',''),'—') title,
+            COALESCE(NULLIF(data->>'${C.titleClearance}',''),'—') clearance,
+            COALESCE(data->>'${C.surfaceOwner}','') surface,
+            COALESCE(data->>'${C.geoOwner}','') geo,
+            COALESCE(data->>'${C.mineralOwner}','') mineral,
+            COALESCE(NULLIF(data->>'${C.estateSplit}',''),'—') split
+       FROM monday_items WHERE ${where} ORDER BY twp, sec, name`, [tenant, like])).rows;
+
+  const totalsR = (await query<{ tracts: number; leased: number; cleared: number; titleDone: number; severed: number }>(
+    `SELECT count(*)::int tracts,
+            count(*) FILTER (WHERE ${LEASED})::int leased,
+            count(*) FILTER (WHERE ${CLEARED})::int cleared,
+            count(*) FILTER (WHERE ${DONE})::int "titleDone",
+            count(*) FILTER (WHERE ${SEVERED})::int severed
+       FROM monday_items WHERE ${where}`, [tenant, like])).rows[0];
+
+  // assemble townships -> section aggregates
+  const tmap = new Map<string, MapTownship>();
+  for (const r of rows) {
+    let t = tmap.get(r.twp);
+    if (!t) { t = { twp: r.twp, tracts: 0, leased: 0, sections: [] }; tmap.set(r.twp, t); }
+    t.tracts++;
+    const leased = /leased/i.test(r.leasing) ? 1 : 0;
+    t.leased += leased;
+    let s = t.sections.find((x) => x.sec === r.sec);
+    if (!s) { s = { sec: r.sec, tracts: 0, leased: 0, cleared: 0, titleDone: 0 }; t.sections.push(s); }
+    s.tracts++;
+    s.leased += leased;
+    if (/cleared/i.test(r.clearance)) s.cleared++;
+    if (/done|complete/i.test(r.title)) s.titleDone++;
+  }
+  const townships = [...tmap.values()].sort((a, b) => b.tracts - a.tracts);
+  return { aoi, aois, townships, tracts: rows, totals: totalsR ?? { tracts: 0, leased: 0, cleared: 0, titleDone: 0, severed: 0 } };
 }

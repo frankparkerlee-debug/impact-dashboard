@@ -12,7 +12,7 @@ async function upsertBatch(tenantSlug: string, board: string, items: MondayItem[
     const chunk = items.slice(i, i + CHUNK);
     const params: unknown[] = [];
     const rows = chunk.map((it, j) => {
-      const data = Object.fromEntries(it.column_values.map((c) => [c.id, c.text]));
+      const data = Object.fromEntries(it.column_values.map((c) => [c.id, c.display_value ?? c.text]));
       const b = j * 5;
       params.push(tenantSlug, board, it.id, it.name, JSON.stringify(data));
       return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5})`;
