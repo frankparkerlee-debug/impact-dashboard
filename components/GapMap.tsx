@@ -95,7 +95,7 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
       </div>
 
       {/* legend */}
-      <div style={{ display: "flex", gap: 16, fontSize: 12, color: MUTED, marginBottom: 18, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 16, fontSize: 12, color: MUTED, marginBottom: 16, flexWrap: "wrap" }}>
         {legend(layer).map((x) => (
           <span key={x.label} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <i style={{ width: 12, height: 12, background: x.c, border: `1px solid ${x.c === EMPTY ? LINE : x.c}`, borderRadius: 3 }} />{x.label}
@@ -103,49 +103,46 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
         ))}
       </div>
 
-      {/* PLSS township matrix — positioned by Range (cols) × Township (rows) */}
-      <div style={{ overflowX: "auto", paddingBottom: 6 }}>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols.length}, minmax(150px, 1fr))`, gap: 10, minWidth: cols.length * 150 }}>
-          {rows.map((sr) =>
-            cols.map((sc) => {
-              const t = placed.find((x) => x.signedT === sr && x.signedR === sc);
-              if (!t) return <div key={`${sr}-${sc}`} style={{ border: `1px dashed ${LINE}`, borderRadius: 8, minHeight: 150, background: "#fcfcfd" }} />;
-              const on = openTwp === t.twp;
-              return (
-                <button key={t.twp} onClick={() => { setOpenTwp(on ? null : t.twp); setSecFilter(null); }} style={{
-                  textAlign: "left", cursor: "pointer", background: "#fff", borderRadius: 8, padding: 11,
-                  border: on ? `2px solid ${ACCENT}` : `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16,24,40,.05)",
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                    <span style={{ fontWeight: 700, fontSize: 13.5 }}>{t.label}</span>
-                    <span className="num" style={{ fontSize: 11, color: MUTED }}>{t.leased}/{t.tracts}</span>
-                  </div>
-                  <MiniGrid twp={t} layer={layer} severedInSec={severedInSec} />
-                </button>
-              );
-            })
+      {/* map (left) + owner side panel (right) */}
+      <div style={{ display: "flex", gap: 18, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0, overflowX: "auto", paddingBottom: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols.length}, minmax(116px, 1fr))`, gap: 8, minWidth: cols.length * 116 }}>
+            {rows.map((sr) =>
+              cols.map((sc) => {
+                const t = placed.find((x) => x.signedT === sr && x.signedR === sc);
+                if (!t) return <div key={`${sr}-${sc}`} style={{ border: `1px dashed ${LINE}`, borderRadius: 7, minHeight: 116, background: "#fcfcfd" }} />;
+                const on = openTwp === t.twp;
+                return (
+                  <button key={t.twp} onClick={() => { setOpenTwp(on ? null : t.twp); setSecFilter(null); }} style={{
+                    textAlign: "left", cursor: "pointer", background: "#fff", borderRadius: 7, padding: 8,
+                    border: on ? `2px solid ${ACCENT}` : `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16,24,40,.05)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                      <span style={{ fontWeight: 700, fontSize: 12 }}>{t.label}</span>
+                      <span className="num" style={{ fontSize: 10, color: MUTED }}>{t.leased}/{t.tracts}</span>
+                    </div>
+                    <MiniGrid twp={t} layer={layer} severedInSec={severedInSec} />
+                  </button>
+                );
+              })
+            )}
+          </div>
+          {unplaced.length > 0 && (
+            <div style={{ marginTop: 12, fontSize: 12, color: MUTED }}>
+              {unplaced.length} township(s) without parseable T/R: {unplaced.map((u) => `${u.twp} (${u.tracts})`).join(", ")}
+            </div>
           )}
         </div>
-      </div>
 
-      {unplaced.length > 0 && (
-        <div style={{ marginTop: 12, fontSize: 12, color: MUTED }}>
-          {unplaced.length} township(s) without parseable T/R: {unplaced.map((u) => `${u.twp} (${u.tracts})`).join(", ")}
-        </div>
-      )}
-
-      {/* township drill: sections + owners */}
-      {open && (
-        <div style={{ marginTop: 22, background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 1px 2px rgba(16,24,40,.05)", padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Township {open.label} <span style={{ color: MUTED, fontWeight: 500, fontSize: 13 }}>· {open.leased}/{open.tracts} leased · {open.tracts} tracts</span></h3>
-            <button onClick={() => setOpenTwp(null)} style={{ border: "none", background: "none", cursor: "pointer", color: MUTED, fontSize: 13 }}>close ✕</button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 22, alignItems: "start" }}>
-            {/* big section grid */}
-            <div>
-              <div style={{ fontSize: 11, color: MUTED, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.4 }}>Sections — click to filter owners</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 3, width: 282 }}>
+        {open && (
+          <aside style={{ width: 392, flexShrink: 0, position: "sticky", top: 16, alignSelf: "flex-start", maxHeight: "calc(100vh - 32px)", display: "flex", flexDirection: "column", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 1px 3px rgba(16,24,40,.08)", overflow: "hidden" }}>
+            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${LINE}`, flexShrink: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Township {open.label}</h3>
+                <button onClick={() => setOpenTwp(null)} style={{ border: "none", background: "none", cursor: "pointer", color: MUTED, fontSize: 13 }}>✕</button>
+              </div>
+              <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>{open.leased}/{open.tracts} leased · click a section to filter</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 3 }}>
                 {SECT_ORDER.map((sec) => {
                   const agg = open.sections.find((s) => s.sec === sec);
                   const col = cellColor(layer, agg, severedInSec(open.twp, sec));
@@ -157,24 +154,25 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
                   );
                 })}
               </div>
-              {secFilter && <button onClick={() => setSecFilter(null)} style={{ marginTop: 10, border: "none", background: "none", color: ACCENT, cursor: "pointer", fontSize: 12.5, padding: 0 }}>← all sections</button>}
+              {secFilter && <button onClick={() => setSecFilter(null)} style={{ marginTop: 9, border: "none", background: "none", color: ACCENT, cursor: "pointer", fontSize: 12, padding: 0 }}>← all sections</button>}
             </div>
-            {/* owner roster */}
-            <OwnerRoster twp={open} bySec={bySec} secFilter={secFilter} mondayBase={mondayBase} />
-          </div>
-        </div>
-      )}
+            <div style={{ overflowY: "auto", padding: "4px 16px 16px" }}>
+              <OwnerRoster twp={open} bySec={bySec} secFilter={secFilter} mondayBase={mondayBase} />
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
 
 function MiniGrid({ twp, layer, severedInSec }: { twp: MapTownship; layer: Layer; severedInSec: (t: string, s: number) => number }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 2 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 1.5 }}>
       {SECT_ORDER.map((sec) => {
         const agg = twp.sections.find((s) => s.sec === sec);
         const col = cellColor(layer, agg, severedInSec(twp.twp, sec));
-        return <div key={sec} style={{ aspectRatio: "1 / 1", background: col.bg, borderRadius: 2, border: col.bg === EMPTY ? `1px solid ${LINE}` : "none" }} />;
+        return <div key={sec} style={{ aspectRatio: "1 / 1", background: col.bg, borderRadius: 1.5, border: col.bg === EMPTY ? `1px solid ${LINE}` : "none" }} />;
       })}
     </div>
   );
@@ -183,29 +181,26 @@ function MiniGrid({ twp, layer, severedInSec }: { twp: MapTownship; layer: Layer
 function OwnerRoster({ twp, bySec, secFilter, mondayBase }: { twp: MapTownship; bySec: Map<string, MapTract[]>; secFilter: number | null; mondayBase: string }) {
   const secs = twp.sections.map((s) => s.sec).filter((s) => secFilter == null || s === secFilter).sort((a, b) => a - b);
   return (
-    <div style={{ maxHeight: 460, overflowY: "auto" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 10.5, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4, padding: "0 0 8px", borderBottom: `1px solid ${LINE}`, position: "sticky", top: 0, background: "#fff" }}>
-        <span>Surface owner</span><span>Geothermal owner</span><span>Mineral owner</span>
-      </div>
+    <div>
       {secs.map((sec) => {
         const tracts = (bySec.get(`${twp.twp}|${sec}`) ?? []).sort((a, b) => a.name.localeCompare(b.name));
         return (
-          <div key={sec} style={{ paddingTop: 10 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: ACCENT, marginBottom: 6 }}>Section {sec}</div>
+          <div key={sec} style={{ paddingTop: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: ACCENT, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.4 }}>Section {sec}</div>
             {tracts.map((t) => (
-              <div key={t.id} style={{ padding: "8px 0", borderBottom: `1px solid ${LINE}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
+              <div key={t.id} style={{ padding: "9px 0", borderBottom: `1px solid ${LINE}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, fontSize: 12.5 }}>{t.name}</span>
-                  <span style={{ display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
-                    <Tag text={t.leasing} /><Tag text={t.clearance} />
-                    {isSevered(t) && <span style={{ fontSize: 10, color: "#fff", background: PURPLE, padding: "1px 6px", borderRadius: 999 }}>severed</span>}
-                    <a href={`${mondayBase}/pulses/${t.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: PURPLE, textDecoration: "none" }}>↗</a>
-                  </span>
+                  <a href={`${mondayBase}/pulses/${t.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: PURPLE, textDecoration: "none", flexShrink: 0 }}>↗</a>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11.5 }}>
-                  <span style={{ color: INK }}>{t.surface || "—"}</span>
-                  <span style={{ color: isSevered(t) ? PURPLE : INK, fontWeight: isSevered(t) ? 600 : 400 }}>{t.geo || "—"}</span>
-                  <span style={{ color: INK }}>{t.mineral || "—"}</span>
+                <div style={{ display: "flex", gap: 5, marginBottom: 7, flexWrap: "wrap" }}>
+                  <Tag text={t.leasing} /><Tag text={t.clearance} />
+                  {isSevered(t) && <span style={{ fontSize: 10, color: "#fff", background: PURPLE, padding: "1px 7px", borderRadius: 999 }}>severed</span>}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "76px 1fr", rowGap: 3, columnGap: 8, fontSize: 11.5 }}>
+                  <span style={{ color: MUTED }}>Surface</span><span style={{ color: INK }}>{t.surface || "—"}</span>
+                  <span style={{ color: MUTED }}>Geothermal</span><span style={{ color: isSevered(t) ? PURPLE : INK, fontWeight: isSevered(t) ? 600 : 400 }}>{t.geo || "—"}</span>
+                  <span style={{ color: MUTED }}>Mineral</span><span style={{ color: INK }}>{t.mineral || "—"}</span>
                 </div>
               </div>
             ))}
