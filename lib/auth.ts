@@ -32,6 +32,6 @@ export async function currentTenant(): Promise<Tenant> {
   throw new Error(
     slugs.length === 0
       ? "Your account isn't in a client workspace yet — ask your admin to add you to the organization."
-      : "Your organizations aren't linked to a workspace — contact your admin."
+      : `Your organization isn't linked to a workspace (your org slug: ${slugs.join(", ")}). Send this to your admin.`
   );
 }
