@@ -11,18 +11,27 @@ export async function currentTenant(): Promise<Tenant> {
   const { userId, orgSlug } = await auth();
   if (!userId) throw new Error("Not authenticated");
 
-  // Clerk Organization slug == tenant slug (see README).
-  if (orgSlug) return getTenant(orgSlug);
+  // 1. Active org in the session, if it maps to a known client workspace.
+  if (orgSlug) {
+    try { return getTenant(orgSlug); } catch { /* not a known tenant — fall through */ }
+  }
 
-  // No active org in session — fall back to the user's single membership.
+  // 2. Otherwise scan the user's memberships and take the first that maps to a known
+  //    workspace. This handles members who ALSO have a personal org (so they don't get
+  //    stuck on "select an organization") and members who haven't set an active org.
   const client = await clerkClient();
   const memberships = await client.users.getOrganizationMembershipList({ userId });
   const slugs = memberships.data
     .map((m) => m.organization.slug)
     .filter((s): s is string => Boolean(s));
 
-  if (slugs.length === 1) return getTenant(slugs[0]);
+  for (const slug of slugs) {
+    try { return getTenant(slug); } catch { /* not a known tenant, keep looking */ }
+  }
+
   throw new Error(
-    slugs.length === 0 ? "User belongs to no organization" : "User must select an organization"
+    slugs.length === 0
+      ? "Your account isn't in a client workspace yet — ask your admin to add you to the organization."
+      : "Your organizations aren't linked to a workspace — contact your admin."
   );
 }
