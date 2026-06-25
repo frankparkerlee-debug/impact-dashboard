@@ -21,6 +21,8 @@ export const COL = {
     surfaceOwner: "text2",
     geoOwner: "text51",                  // geothermal estate owner (may differ = severed)
     mineralOwner: "text3",
+    titleLink: "link",                   // "Link to Title" runsheet (Google Sheet) — "label - url"
+    indexLink: "link6",                  // "Link to Index" (Google Sheet) — "label - url"
   },
   leases: {
     status: "status",
@@ -30,6 +32,8 @@ export const COL = {
     area: "dropdown_mkthwqvk",
     leaseId: "text_mm44gmna",
     w9File: "file_mkv2nmm7",             // W9 attachment (empty = missing)
+    leaseFile: "file_mkv2nyrr",          // executed lease PDF (SharePoint)
+    termLetter: "file_mkv2hb7w",         // term letter (SharePoint)
     poc: "text_mm40304w",                // Point of Contact = lessor (≈ geothermal owner)
   },
   aoi: { status: "color_mm3z850g", state: "dropdown_mm3zmyzq", commodity: "dropdown_mm3za6sf", target: "numeric_mm3z4ttz" },
@@ -384,4 +388,72 @@ export async function loadPaymentRisk(tenant: string) {
     notice: flags.filter((f) => f.level === "notice").length,
   };
   return { flags, counts, clearSoon, later, totalPaying: leasesR.rows.length };
+}
+
+// ---- DOCUMENTS: coverage + gaps over the title runsheets / index / lease PDFs / W-9s ----
+export interface DocLink { url: string; label: string }
+export interface TractDoc { id: string; name: string; aoi: string; owner: string; leased: boolean; titleDone: boolean; title?: DocLink; index?: DocLink }
+export interface LeaseDoc { id: string; name: string; lessor: string; aoi: string; status: string; lease?: string; w9?: string; term?: string }
+
+// tract link columns store "label - https://url"; file columns store a bare URL.
+function splitLink(v?: string | null): DocLink | undefined {
+  if (!v) return undefined;
+  const m = v.match(/(https?:\/\/\S+)/);
+  if (!m) return undefined;
+  const label = v.slice(0, m.index).replace(/[-–\s]+$/, "").trim();
+  return { url: m[1], label: label || "Open" };
+}
+function fileUrl(v?: string | null): string | undefined {
+  if (!v) return undefined;
+  const m = v.match(/(https?:\/\/\S+)/);
+  return m ? m[1] : undefined;
+}
+
+export async function loadDocuments(tenant: string) {
+  const Lc = COL.leases;
+  const [trR, leR] = await Promise.all([
+    query<{ id: string; name: string; aoi: string; owner: string; leased: boolean; titleDone: boolean; ttl: string | null; idx: string | null }>(
+      `SELECT monday_item_id id, name,
+              COALESCE(NULLIF(data->>'${C.aoi}',''),'Unassigned') aoi,
+              COALESCE(data->>'${C.surfaceOwner}','') owner,
+              (${LEASED})::bool leased, (${TITLE_DONE})::bool "titleDone",
+              data->>'${C.titleLink}' ttl, data->>'${C.indexLink}' idx
+         FROM monday_items WHERE tenant=$1 AND board='tracts'`, [tenant]),
+    query<{ id: string; name: string; lessor: string; aoi: string; status: string; lease: string | null; w9: string | null; term: string | null }>(
+      `SELECT monday_item_id id, name,
+              COALESCE(data->>'${Lc.poc}','') lessor,
+              COALESCE(NULLIF(data->>'${Lc.area}',''),'Unassigned') aoi,
+              COALESCE(data->>'${Lc.status}','') status,
+              data->>'${Lc.leaseFile}' lease, data->>'${Lc.w9File}' w9, data->>'${Lc.termLetter}' term
+         FROM monday_items WHERE tenant=$1 AND board='leases'`, [tenant]),
+  ]);
+
+  const tracts: TractDoc[] = trR.rows.map((r) => ({
+    id: r.id, name: r.name, aoi: r.aoi, owner: r.owner, leased: r.leased, titleDone: r.titleDone,
+    title: splitLink(r.ttl), index: splitLink(r.idx),
+  }));
+  const leases: LeaseDoc[] = leR.rows.map((r) => ({
+    id: r.id, name: r.name, lessor: r.lessor, aoi: r.aoi, status: r.status,
+    lease: fileUrl(r.lease), w9: fileUrl(r.w9), term: fileUrl(r.term),
+  }));
+
+  const executed = (l: LeaseDoc) => /leased|executed|signed/i.test(l.status);
+  const coverage = {
+    tracts: tracts.length,
+    titleDocs: tracts.filter((t) => t.title).length,
+    indexDocs: tracts.filter((t) => t.index).length,
+    leases: leases.length,
+    leasePdfs: leases.filter((l) => l.lease).length,
+    w9s: leases.filter((l) => l.w9).length,
+  };
+  const gaps = {
+    // leased but NO title work on file — concerning
+    leasedNoTitleDoc: tracts.filter((t) => t.leased && !t.title && !t.index).length,
+    // title called complete but the document isn't attached
+    titleDoneNoDoc: tracts.filter((t) => t.titleDone && !t.title && !t.index).length,
+    // executed lease, no W-9 / no lease PDF on file
+    execNoW9: leases.filter((l) => executed(l) && !l.w9).length,
+    execNoPdf: leases.filter((l) => executed(l) && !l.lease).length,
+  };
+  return { coverage, gaps, tracts, leases };
 }
