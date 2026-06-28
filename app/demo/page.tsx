@@ -20,23 +20,26 @@ export default function DemoPage() {
       </header>
 
       <section style={{ maxWidth: 680, margin: "0 auto", padding: "40px 24px 30px", textAlign: "center" }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.8, lineHeight: 1.12, margin: "0 0 12px" }}>Here's the product, live.</h1>
-        <p style={{ fontSize: 16, color: "#6b7280", lineHeight: 1.55, margin: "0 auto", maxWidth: 520 }}>
-          Everything below runs on <b style={{ color: "#111827" }}>sample data</b> — the same views your real project gets: a screening Snapshot and a live, drill‑down gap map. Click around.
+        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.8, lineHeight: 1.12, margin: "0 0 12px" }}>See it before you commit.</h1>
+        <p style={{ fontSize: 16, color: "#6b7280", lineHeight: 1.55, margin: "0 auto", maxWidth: 545 }}>
+          Two things, on <b style={{ color: "#111827" }}>sample data</b>: the free <b style={{ color: "#111827" }}>Snapshot</b> we run on your target area, and the <b style={{ color: "#111827" }}>client portal</b> you get once we're working together. Click around.
         </p>
       </section>
 
       {/* Snapshot */}
       <section style={{ background: "#f8fafc", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", padding: "40px 24px" }}>
-        <div style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 20 }}>1 · The Snapshot</div>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.6 }}>1 · The Snapshot — a report we run on your area</div>
+          <div style={{ fontSize: 13.5, color: "#6b7280", maxWidth: 540, margin: "6px auto 0", lineHeight: 1.5 }}>You give us the area; <b style={{ color: "#111827" }}>we produce this screening read and send it to you.</b> A fast "is this worth pursuing" answer — not the full system, not something you operate.</div>
+        </div>
         <Snapshot data={exampleSnapshot} />
       </section>
 
       {/* Gap map */}
       <section style={{ maxWidth: 1180, margin: "0 auto", padding: "44px 24px 20px" }}>
-        <div style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>2 · Inside the portal — the Gap Map</div>
-        <p style={{ textAlign: "center", fontSize: 14, color: "#6b7280", margin: "0 auto 22px", maxWidth: 600 }}>
-          Every section by leasing, title, and estate status — laid out like a real PLSS plat. Toggle the layers; click a township to see its sections and owners.
+        <div style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>2 · The client portal — your live workspace</div>
+        <p style={{ textAlign: "center", fontSize: 14, color: "#6b7280", margin: "0 auto 22px", maxWidth: 620, lineHeight: 1.5 }}>
+          A glimpse of what you get <b style={{ color: "#111827" }}>once you're a client</b> — the live workspace where we run your position together. Every section by leasing, title, and estate status, like a working PLSS plat. Toggle the layers; click a township to see its sections and owners.
         </p>
         <GapMap data={demoMap} mondayBase="#" demo />
       </section>
