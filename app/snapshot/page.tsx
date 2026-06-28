@@ -2,14 +2,12 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { Wordmark } from "@/components/Brand";
 import { Snapshot, type SnapshotData } from "@/components/Snapshot";
+import SnapshotLeadForm from "@/components/SnapshotLeadForm";
 
 export const metadata = {
   title: "Land Snapshot — Impact Land Services",
   description: "Know who owns it, what's clear, and whether it's buildable — in days, not weeks.",
 };
-
-// Demo-gated: route this to your Calendly / real inbox before going live.
-const DEMO_LINK = "mailto:hello@impactlandservices.com?subject=Request%20a%20Land%20Snapshot";
 
 const example: SnapshotData = {
   area: "Sample — Geothermal Project Area",
@@ -57,7 +55,7 @@ export default function SnapshotPage() {
           Hand us a target area. We tell you <b style={{ color: "#111827" }}>who owns it</b>, <b style={{ color: "#111827" }}>what's clear</b>, and <b style={{ color: "#111827" }}>whether it's buildable</b> — a fast screening read before you commit a dollar.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href={DEMO_LINK} style={primaryBtn}>Book a demo to get your Snapshot</a>
+          <a href="#get" style={primaryBtn}>Get your free Snapshot</a>
           <a href="#example" style={ghostBtn}>See an example ↓</a>
         </div>
       </section>
@@ -83,12 +81,12 @@ export default function SnapshotPage() {
         <Snapshot data={example} />
       </section>
 
-      {/* bottom cta */}
-      <section style={{ maxWidth: 620, margin: "0 auto", padding: "48px 24px 56px", textAlign: "center" }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, margin: "0 0 10px" }}>Get a Snapshot on your target area.</h2>
-        <p style={{ fontSize: 15, color: "#6b7280", margin: "0 0 22px" }}>A screening read in days — and the on‑ramp to full diligence, acquisition, and management.</p>
-        <a href={DEMO_LINK} style={primaryBtn}>Book a demo</a>
-        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 28 }}>Impact Land Services · Land, title & development intelligence across the West.</p>
+      {/* capture */}
+      <section id="get" style={{ maxWidth: 620, margin: "0 auto", padding: "48px 24px 56px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, margin: "0 0 10px" }}>Get your free Land Snapshot.</h2>
+        <p style={{ fontSize: 15, color: "#6b7280", margin: "0 0 24px" }}>Tell us your target area — we'll send your screening read. The on‑ramp to full diligence, acquisition, and management.</p>
+        <SnapshotLeadForm />
+        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 30 }}>Impact Land Services · Land, title & development intelligence across the West.</p>
       </section>
     </main>
   );
