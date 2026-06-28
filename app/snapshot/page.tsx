@@ -1,42 +1,13 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { Wordmark } from "@/components/Brand";
-import { Snapshot, type SnapshotData } from "@/components/Snapshot";
+import { Snapshot } from "@/components/Snapshot";
 import SnapshotLeadForm from "@/components/SnapshotLeadForm";
+import { exampleSnapshot } from "@/lib/demoData";
 
 export const metadata = {
   title: "Land Snapshot — Impact Land Services",
   description: "Know who owns it, what's clear, and whether it's buildable — in days, not weeks.",
-};
-
-const example: SnapshotData = {
-  area: "Sample — Geothermal Project Area",
-  location: "Beaver County, UT · T30S–32S · R12W–13W",
-  date: "Sample report",
-  tracts: 84, acres: 12450, owners: 39,
-  buildability: {
-    score: 64, label: "Moderate",
-    note: "Largely assemblable — surface ownership is consolidated and most acreage is open to lease, but ~30% of tracts need title curative and 3 geothermal estates are severed from the surface.",
-  },
-  indices: [
-    { label: "Ownership clarity", score: 78, read: "Mostly consolidated; few fractional owners" },
-    { label: "Title condition", score: 52, read: "~30% of tracts need curative" },
-    { label: "Leasing openness", score: 71, read: "Largely unleased — open to negotiate" },
-    { label: "Estate simplicity", score: 46, read: "3 severed geothermal estates" },
-    { label: "Consolidation", score: 66, read: "Mostly large tracts; some fragmentation" },
-    { label: "Holdout risk", score: 58, read: "5 potential holdout parcels" },
-  ],
-  flags: [
-    { label: "Tracts needing curative", count: 25, severity: "high" },
-    { label: "Severed geothermal estates", count: 3, severity: "med" },
-    { label: "Potential holdouts", count: 5, severity: "med" },
-    { label: "Executed leases missing a W‑9", count: 4, severity: "low" },
-  ],
-  topOwners: [
-    { name: "Cassidy Ranch LLC", note: "14 tracts · surface + geothermal" },
-    { name: "Palley Family Trust", note: "fractional geothermal — 1/3 each" },
-    { name: "State of Utah (SITLA)", note: "9 tracts · surface" },
-  ],
 };
 
 export default function SnapshotPage() {
@@ -78,7 +49,7 @@ export default function SnapshotPage() {
       {/* example report */}
       <section id="example" style={{ background: "#f8fafc", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", padding: "44px 24px" }}>
         <div style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 20 }}>Example report</div>
-        <Snapshot data={example} />
+        <Snapshot data={exampleSnapshot} />
       </section>
 
       {/* capture */}

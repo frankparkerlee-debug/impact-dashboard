@@ -1,14 +1,16 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const INK = "#111827", MUTED = "#6b7280", LINE = "#d1d5db", ACCENT = "#2563eb";
 const input: React.CSSProperties = { width: "100%", padding: "11px 13px", border: `1px solid ${LINE}`, borderRadius: 9, fontSize: 14.5, outline: "none", color: INK, background: "#fff" };
 
 export default function SnapshotLeadForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [area, setArea] = useState("");
   const [name, setName] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [msg, setMsg] = useState("");
 
   async function submit(e: React.FormEvent) {
@@ -20,19 +22,10 @@ export default function SnapshotLeadForm() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, area, name }),
       });
-      if (r.ok) { setStatus("done"); return; }
+      if (r.ok) { router.push("/demo"); return; }
       const d = await r.json().catch(() => ({}));
       setMsg(d.error || "Something went wrong."); setStatus("error");
     } catch { setMsg("Something went wrong — please try again."); setStatus("error"); }
-  }
-
-  if (status === "done") {
-    return (
-      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12, padding: "22px 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 17, fontWeight: 600, color: "#15803d", marginBottom: 6 }}>✓ Your Snapshot is on the way.</div>
-        <div style={{ fontSize: 14, color: MUTED }}>We'll email it to <b style={{ color: INK }}>{email}</b> shortly. No sales call — just the report.</div>
-      </div>
-    );
   }
 
   return (

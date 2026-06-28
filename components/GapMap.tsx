@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import type { MapData, MapTract, MapSectionAgg, MapTownship } from "@/lib/metrics";
 
@@ -37,7 +37,7 @@ function cellColor(layer: Layer, agg: MapSectionAgg | undefined, severed: number
   return severed > 0 ? { bg: PURPLE, fg: "#fff" } : { bg: "#e5e7eb", fg: MUTED };
 }
 
-export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase: string }) {
+export default function GapMap({ data, mondayBase, demo }: { data: MapData; mondayBase: string; demo?: boolean }) {
   const [layer, setLayer] = useState<Layer>("leasing");
   const [openTwp, setOpenTwp] = useState<string | null>(null);
   const [secFilter, setSecFilter] = useState<number | null>(null);
@@ -71,12 +71,14 @@ export default function GapMap({ data, mondayBase }: { data: MapData; mondayBase
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
         {data.aois.map((a) => {
           const on = a.k === data.aoi;
-          return (
-            <Link key={a.k} href={`/dashboard/map?aoi=${encodeURIComponent(a.k)}`} style={{
-              fontSize: 13, padding: "6px 12px", borderRadius: 8, textDecoration: "none",
-              border: `1px solid ${on ? ACCENT : LINE}`, background: on ? ACCENT : "#fff", color: on ? "#fff" : INK, fontWeight: on ? 600 : 500,
-            }}>{a.k} <span className="num" style={{ opacity: 0.7 }}>{a.n}</span></Link>
-          );
+          const style: CSSProperties = {
+            fontSize: 13, padding: "6px 12px", borderRadius: 8, textDecoration: "none",
+            border: `1px solid ${on ? ACCENT : LINE}`, background: on ? ACCENT : "#fff", color: on ? "#fff" : INK, fontWeight: on ? 600 : 500,
+          };
+          const inner = <>{a.k} <span className="num" style={{ opacity: 0.7 }}>{a.n}</span></>;
+          return demo
+            ? <span key={a.k} style={{ ...style, cursor: "default" }}>{inner}</span>
+            : <Link key={a.k} href={`/dashboard/map?aoi=${encodeURIComponent(a.k)}`} style={style}>{inner}</Link>;
         })}
       </div>
 
