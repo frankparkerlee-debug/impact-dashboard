@@ -8,8 +8,8 @@ export default function Home() {
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "linear-gradient(180deg,#f8fafc 0%,#ffffff 60%)" }}>
       <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}><Wordmark size={19} /></div>
-        <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.6, lineHeight: 1.15, margin: "0 0 12px", color: "#111827" }}>The land &amp; title workspace</h1>
-        <p style={{ color: "#6b7280", fontSize: 15.5, lineHeight: 1.55, margin: "0 0 28px" }}>Secure, real-time visibility into your leases, title, payment risk, and documents.</p>
+        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.7, lineHeight: 1.12, margin: "0 0 12px", color: "#111827" }}>Get to buildable.</h1>
+        <p style={{ color: "#6b7280", fontSize: 15.5, lineHeight: 1.55, margin: "0 0 28px" }}>Land, title, and a live, de‑risked view of your entire position — faster than anyone, across the West.</p>
         <SignedOut>
           <SignInButton mode="modal"><button style={primaryBtn}>Sign in to your workspace</button></SignInButton>
         </SignedOut>
