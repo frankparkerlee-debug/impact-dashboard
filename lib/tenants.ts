@@ -40,7 +40,7 @@ export const TENANTS: Record<string, Tenant> = {
   fervo: {
     slug: "fervo",
     displayName: "Fervo Energy",
-    aliases: ["fervo-energy-1782222787179794763"],
+    aliases: ["fervo-energy-1782222787179794763", "fervo-1782772219537630796"],
     monday: {
       workspaceId: "7276746",
       boards: {
