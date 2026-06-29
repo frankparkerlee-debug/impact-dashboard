@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ClerkProvider, UserButton } from "@clerk/nextjs";
-import { clerkAppearance } from "@/lib/clerkAppearance";
+import { UserButton } from "@clerk/nextjs";
 import { currentTenant } from "@/lib/auth";
 import { Wordmark } from "@/components/Brand";
 
@@ -12,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   try { workspace = (await currentTenant()).displayName; } catch { /* unauthorized — header still renders */ }
 
   return (
-    <ClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
+    <>
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderBottom: "1px solid #e5e7eb" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "11px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <Link href="/dashboard" style={{ textDecoration: "none" }}><Wordmark size={15.5} /></Link>
@@ -23,6 +22,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
       </header>
       {children}
-    </ClerkProvider>
+    </>
   );
 }
