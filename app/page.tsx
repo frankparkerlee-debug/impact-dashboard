@@ -4,9 +4,9 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Wordmark, Mark } from "@/components/Brand";
 
 export const metadata = {
-  title: "Impact Land Services — Get to buildable.",
+  title: "Impact Land Services — Get to production.",
   description:
-    "Land, title, and a live, de-risked view of your entire position — faster than anyone, across the West. Start with a free Eval of your target area.",
+    "We secure and de-risk the land so nothing on the ground stands between you and production. Start with a free Eval of your target area — across the West.",
 };
 
 const INK = "#111827";
@@ -46,12 +46,13 @@ export default function Home() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ffffff 70%)", borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "72px 24px 64px", textAlign: "center" }}>
-          <span style={eyebrow}>Land &amp; development intelligence across the West</span>
-          <h1 style={{ fontSize: 52, fontWeight: 700, letterSpacing: -1.6, lineHeight: 1.04, margin: "20px 0 16px" }}>Get to buildable.</h1>
-          <p style={{ fontSize: 18, color: MUTED, lineHeight: 1.55, margin: "0 auto 30px", maxWidth: 580 }}>
-            Know who owns it, what&apos;s clear, and whether you can build — then we secure the ground and keep it clean. Start with a <b style={{ color: INK }}>free read of your target area</b>; we take it the rest of the way.
+      <section style={{ position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#f8fafc 0%,#ffffff 72%)", borderBottom: `1px solid ${LINE}` }}>
+        <TopoBackdrop />
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 800, margin: "0 auto", padding: "76px 24px 66px", textAlign: "center" }}>
+          <span style={eyebrow}>Land &amp; development intelligence for Western energy</span>
+          <h1 style={{ fontSize: 54, fontWeight: 700, letterSpacing: -1.7, lineHeight: 1.03, margin: "20px 0 16px" }}>Get to production.</h1>
+          <p style={{ fontSize: 18, color: MUTED, lineHeight: 1.55, margin: "0 auto 30px", maxWidth: 590 }}>
+            The land is the part most likely to blow your timeline. We secure it and clear the title — locked-up ownership, a buildable position, no surprises — so <b style={{ color: INK }}>nothing on the ground stands between you and production.</b> Start with a free read of your target area.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/snapshot" style={primaryBtn}>Run a free Eval</Link>
@@ -64,17 +65,17 @@ export default function Home() {
       {/* ── Problem ──────────────────────────────────────────── */}
       <section style={{ maxWidth: 820, margin: "0 auto", padding: "60px 24px 20px", textAlign: "center" }}>
         <p style={{ fontSize: 23, fontWeight: 600, letterSpacing: -0.4, lineHeight: 1.4, margin: 0 }}>
-          Before you commit a dollar to an area, you need to know if you can actually build on it.
-          <span style={{ color: MUTED, fontWeight: 500 }}> That answer usually takes weeks of landmen, title abstractors, and spreadsheets. We make it days — and we don&apos;t stop at the answer.</span>
+          Before you produce a single megawatt, you have to own the ground — clean, clear, and contiguous.
+          <span style={{ color: MUTED, fontWeight: 500 }}> That&apos;s the part that quietly kills timelines: fragmented ownership, title defects, severed estates, holdouts. We handle it, fast — so the land is never what holds you back.</span>
         </p>
       </section>
 
       {/* ── How it works (the loop) ──────────────────────────── */}
       <section id="how" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 24px 16px" }}>
         <div style={{ textAlign: "center", marginBottom: 8 }}><span style={sectionLabel}>How it works</span></div>
-        <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>One path, screen to secured.</h2>
-        <p style={{ textAlign: "center", fontSize: 15, color: MUTED, maxWidth: 600, margin: "0 auto 36px", lineHeight: 1.55 }}>
-          You start it yourself in minutes. When you want certainty, our team takes over. Your portal stays live through all of it.
+        <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>One path — target area to production-ready ground.</h2>
+        <p style={{ textAlign: "center", fontSize: 15, color: MUTED, maxWidth: 620, margin: "0 auto 36px", lineHeight: 1.55 }}>
+          You start it yourself in minutes. When you want certainty, our team takes over. Your portal stays live the whole way — through to the day you break ground.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))", gap: 14 }}>
           {LOOP.map((s, i) => (
@@ -83,21 +84,24 @@ export default function Home() {
         </div>
         {/* phase legend */}
         <div style={{ display: "flex", justifyContent: "center", gap: 22, flexWrap: "wrap", marginTop: 24 }}>
-          {[["Self-serve", ACCENT], ["Our team", "#0f766e"], ["Your portal", "#b45309"]].map(([t, c]) => (
+          {[["You, self-serve", ACCENT], ["Our team", "#0f766e"], ["Your portal", "#b45309"]].map(([t, c]) => (
             <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, color: MUTED, fontWeight: 500 }}>
               <span style={{ width: 9, height: 9, borderRadius: 3, background: c as string }} /> {t}
             </span>
           ))}
         </div>
+        <p style={{ textAlign: "center", fontSize: 14.5, color: INK, fontWeight: 600, marginTop: 30 }}>
+          From there: you build, you produce — <span style={{ color: MUTED, fontWeight: 500 }}>on ground that won&apos;t surprise you.</span>
+        </p>
       </section>
 
       {/* ── Services ladder ──────────────────────────────────── */}
       <section id="services" style={{ background: PANEL, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, marginTop: 56 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "60px 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 8 }}><span style={sectionLabel}>What we do</span></div>
-          <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>Screen it. Prove it. Secure it. Keep it clean.</h2>
-          <p style={{ textAlign: "center", fontSize: 15, color: MUTED, maxWidth: 560, margin: "0 auto 38px", lineHeight: 1.55 }}>
-            Four rungs. Start free and self-serve; bring in our team the moment you want more than a read.
+          <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>Screen it. Prove it. Secure it. Protect it.</h2>
+          <p style={{ textAlign: "center", fontSize: 15, color: MUTED, maxWidth: 580, margin: "0 auto 38px", lineHeight: 1.55 }}>
+            Four rungs from a target area to production-ready ground. Start free and self-serve; bring in our team the moment you want more than a read.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 16 }}>
             {SERVICES.map((s) => (
@@ -112,9 +116,9 @@ export default function Home() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 40, alignItems: "center" }}>
           <div>
             <span style={sectionLabel}>The client portal</span>
-            <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "10px 0 14px" }}>Your whole position, live.</h2>
+            <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "10px 0 14px" }}>Watch the ground go from raw to ready.</h2>
             <p style={{ fontSize: 16, color: MUTED, lineHeight: 1.6, margin: "0 0 20px" }}>
-              Once we&apos;re working together, everything lives in one workspace. Every section mapped by leasing, title, and estate status — like a working PLSS plat. Payment risk surfaced before it&apos;s a problem. Deliverables pushed to you, branded and ready to share.
+              Once we&apos;re working together, your whole position lives in one workspace. Every section mapped by leasing, title, and estate status — like a working PLSS plat. Payment risk surfaced before it&apos;s a problem. Deliverables pushed to you, branded and ready to share.
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10 }}>
               {["Live gap map of your entire acreage", "Escalating payment-risk queue", "Title & curative status, tract by tract", "Shareable, branded deliverables"].map((t) => (
@@ -144,11 +148,12 @@ export default function Home() {
       </section>
 
       {/* ── Closing CTA ──────────────────────────────────────── */}
-      <section style={{ background: INK, color: "#fff" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
-          <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: -1, margin: "0 0 12px" }}>Get to buildable.</h2>
-          <p style={{ fontSize: 16.5, color: "#cbd5e1", lineHeight: 1.55, margin: "0 auto 28px", maxWidth: 500 }}>
-            Run a free Eval on your target area in minutes. Like what you see? We&apos;ll take it all the way to secured.
+      <section style={{ background: INK, color: "#fff", position: "relative", overflow: "hidden" }}>
+        <TopoBackdrop dark />
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "66px 24px", textAlign: "center" }}>
+          <h2 style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.1, margin: "0 0 12px" }}>Get to production.</h2>
+          <p style={{ fontSize: 16.5, color: "#cbd5e1", lineHeight: 1.55, margin: "0 auto 28px", maxWidth: 510 }}>
+            Run a free Eval on your target area in minutes. Like what you see? We take it all the way to secured, production-ready ground.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/snapshot" style={primaryBtn}>Run a free Eval</Link>
@@ -183,19 +188,42 @@ const LOOP = [
   { title: "We prove up & scope", body: "What we found, what full diligence covers, comparable work, and a firm quote.", tag: "#0f766e" },
   { title: "We run title & acquire", body: "Deep title, curative, and securing the ground across fragmented ownership.", tag: "#0f766e" },
   { title: "Track it live", body: "Your whole position in the portal — updated as we work, nothing in a black box.", tag: "#b45309" },
-  { title: "Deliverables, pushed", body: "Branded, shareable, and yours — ready to hand to partners, lenders, and investors.", tag: "#b45309" },
+  { title: "Production-ready ground", body: "Secured, cleared, and yours — the position your build and financing run on.", tag: "#b45309" },
 ];
 
 const SERVICES = [
   { rung: "01", name: "Eval", price: "Free · self-serve", body: "Plug in your area, get an instant buildability read — ownership, title status, gaps, and risk. The fast “is this worth pursuing” answer.", href: "/snapshot", cta: "Run a free Eval", featured: true },
   { rung: "02", name: "Diligence", price: "Fixed fee", body: "Our team goes deep: full title research, the curative path, and a development-ready picture of your position. Certainty, not a screen.", href: "/snapshot#get", cta: "Request diligence" },
   { rung: "03", name: "Acquisition", price: "Engagement", body: "We secure the ground — leasing, assembly, negotiation, and closing across fragmented surface, mineral, and geothermal estates.", href: "/snapshot#get", cta: "Talk to us" },
-  { rung: "04", name: "Management", price: "Monthly", body: "We keep it clean — ongoing lease, payment, and obligation management, surfaced live in your portal so nothing slips.", href: "/snapshot#get", cta: "Talk to us" },
+  { rung: "04", name: "Management", price: "Monthly", body: "We protect the producing asset — ongoing lease, payment, and obligation management, surfaced live in your portal so a missed deadline never threatens production.", href: "/snapshot#get", cta: "Talk to us" },
 ];
 
 const PLAT = ["#16a34a", "#16a34a", "#f59e0b", "#16a34a", "#dc2626", "#e5e7eb", "#16a34a", "#f59e0b", "#16a34a", "#16a34a", "#16a34a", "#f59e0b", "#e5e7eb", "#16a34a", "#dc2626", "#16a34a", "#f59e0b", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#f59e0b", "#16a34a", "#16a34a"];
 
 /* ── pieces ────────────────────────────────────────────────── */
+
+function TopoBackdrop({ dark = false }: { dark?: boolean }) {
+  const W = 1200, H = 380, step = 24, rows = 9;
+  const stroke = dark ? "#60a5fa" : "#2563eb";
+  const paths = [];
+  for (let li = 0; li < rows; li++) {
+    const baseY = 22 + li * 40;
+    const amp = 9 + (li % 3) * 7;
+    const phase = li * 0.8;
+    const k = 0.011 + (li % 2) * 0.005;
+    let d = "";
+    for (let x = 0; x <= W; x += step) {
+      const y = baseY + amp * Math.sin(x * k + phase);
+      d += (x === 0 ? "M" : "L") + x + "," + (Math.round(y * 10) / 10) + " ";
+    }
+    paths.push(<path key={li} d={d} fill="none" stroke={stroke} strokeWidth={1.1} opacity={(dark ? 0.05 : 0.06) + (li % 3) * 0.016} />);
+  }
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+      {paths}
+    </svg>
+  );
+}
 
 function Step({ n, title, body, tag }: { n: number; title: string; body: string; tag: string }) {
   return (
@@ -210,15 +238,31 @@ function Step({ n, title, body, tag }: { n: number; title: string; body: string;
 function Service({ rung, name, price, body, href, cta, featured }: { rung: string; name: string; price: string; body: string; href: string; cta: string; featured?: boolean }) {
   return (
     <div style={{ border: featured ? `1.5px solid ${ACCENT}` : `1px solid ${LINE}`, borderRadius: 14, padding: 22, background: "#fff", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: featured ? ACCENT : FAINT, letterSpacing: 1 }}>{rung}</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, background: featured ? ACCENT_BG : PANEL, border: `1px solid ${featured ? "#dbeafe" : LINE}` }}>
+          <ServiceIcon name={name} />
+        </span>
         <span style={{ fontSize: 11.5, fontWeight: 600, color: featured ? ACCENT : MUTED, background: featured ? ACCENT_BG : PANEL, borderRadius: 999, padding: "3px 10px" }}>{price}</span>
       </div>
-      <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: -0.3, marginBottom: 8 }}>{name}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: -0.3 }}>{name}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: FAINT, letterSpacing: 1 }}>{rung}</span>
+      </div>
       <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.55, flex: 1, marginBottom: 18 }}>{body}</div>
       <Link href={href} style={{ fontSize: 13.5, fontWeight: 600, color: ACCENT, textDecoration: "none" }}>{cta} →</Link>
     </div>
   );
+}
+
+function ServiceIcon({ name }: { name: string }) {
+  const p = { fill: "none", stroke: ACCENT, strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const box = (children: React.ReactNode) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">{children}</svg>
+  );
+  if (name === "Eval") return box(<g><path d="M4 18a8 8 0 0 1 16 0" {...p} /><path d="M12 18l4.6-3.6" {...p} /><circle cx="12" cy="18" r="1.4" fill={ACCENT} /></g>);
+  if (name === "Diligence") return box(<g><rect x="4" y="3" width="10.5" height="13" rx="1.6" {...p} /><path d="M6.8 7h5M6.8 10h3.5" {...p} /><circle cx="15" cy="15.5" r="3.6" {...p} /><path d="M17.7 18.2l2.8 2.8" {...p} /></g>);
+  if (name === "Acquisition") return box(<g><path d="M7 21V4" {...p} /><path d="M7 5h9l-2.4 3 2.4 3H7" {...p} /><path d="M4.5 21h8" {...p} /></g>);
+  return box(<g><path d="M12 3l7 3v5c0 4.4-2.9 7.5-7 9-4.1-1.5-7-4.6-7-9V6z" {...p} /><path d="M9 11.6l2.2 2.2L15 9.6" {...p} /></g>);
 }
 
 function Check() {
