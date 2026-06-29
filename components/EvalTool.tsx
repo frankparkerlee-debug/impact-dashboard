@@ -4,6 +4,8 @@ import Link from "next/link";
 
 const INK = "#111827", MUTED = "#6b7280", FAINT = "#9ca3af", LINE = "#d1d5db", HAIR = "#e5e7eb", ACCENT = "#2563eb", PANEL = "#f8fafc";
 const GREEN = "#16a34a", AMBER = "#d97706", RED = "#dc2626";
+const SERVICE_COLOR: Record<string, string> = { Diligence: "#2563eb", Acquisition: "#0f766e", Curative: "#b45309", Management: "#475569" };
+const SERVICE_TINT: Record<string, string> = { Diligence: "#eff6ff", Acquisition: "#f0fdfa", Curative: "#fffbeb", Management: "#f1f5f9" };
 const field: React.CSSProperties = { width: "100%", padding: "9px 11px", border: `1px solid ${LINE}`, borderRadius: 9, fontSize: 13.5, outline: "none", color: INK, background: "#fff", appearance: "auto" };
 const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: INK, marginBottom: 6, display: "block" };
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
@@ -15,7 +17,7 @@ type FieldDef = { key: string; label: string; opts: Opt[] };
 type Vals = Record<string, string>;
 
 interface Lens { key: string; label: string; score: number; weight: number; confidence: "Low" | "Moderate"; read: string }
-interface EvalOut { vertical: Vertical; area: string; acres: number; tracts: number; composite: number; tier: { label: string; color: string }; basis: string; note: string; lenses: Lens[]; fatals: string[]; verify: string[] }
+interface EvalOut { vertical: Vertical; area: string; acres: number; tracts: number; composite: number; tier: { label: string; color: string }; basis: string; note: string; lenses: Lens[]; fatals: string[]; plan: { step: string; service: string }[] }
 
 const RESOURCE: Record<Vertical, FieldDef[]> = {
   oil_gas: [
@@ -104,18 +106,25 @@ function compute(vertical: Vertical, area: string, acres: number, tracts: number
     { key: "land", label: "Land & title", score: L.score, weight: w.l, confidence: conf(L.unknown), read: read(L.score, "Clean, assemblable position", "Some title / ownership work", "Fragmented / title-heavy") },
   ];
 
-  const verify: string[] = [];
-  if ((vals.severance ?? DEFAULTS.severance) !== "intact") verify.push("Confirm mineral severance & ownership (title pull)");
-  if (vertical === "geothermal" && ["unknown", "low"].includes(vals.temp ?? DEFAULTS.temp)) verify.push("Confirm temperature-at-depth (heat-flow / BHT data, test well)");
-  if (vertical === "oil_gas" && (vals.offset ?? DEFAULTS.offset) !== "strong") verify.push("Pull offset well production & decline (state well DB)");
-  if (["unknown", "significant"].includes(vals.enviro ?? DEFAULTS.enviro)) verify.push("Screen critical habitat, wetlands & permitting path");
-  if (["unknown", "far"].includes(vals.infra ?? DEFAULTS.infra)) verify.push(vertical === "oil_gas" ? "Confirm pipeline / takeaway capacity" : "Confirm transmission & interconnection");
-  verify.push("Full title & curative across the position");
+  const pick = (k: string) => vals[k] ?? DEFAULTS[k];
+  const plan: { step: string; service: string }[] = [];
+  if (pick("ownership") === "fragmented") plan.push({ step: "Assemble the position — negotiate and lease the fragmented tracts", service: "Acquisition" });
+  if (pick("severance") === "severed" || pick("severance") === "unknown") plan.push({ step: "Map every mineral owner and secure the severed estates", service: "Acquisition" });
+  if (pick("title") === "issues") plan.push({ step: "Clear the title defects with targeted curative", service: "Curative" });
+  else if (pick("title") === "unknown") plan.push({ step: "Run title to confirm what's actually clear", service: "Diligence" });
+  if (pick("leasehold") === "expiring") plan.push({ step: "Lock the expiring leases before they lapse", service: "Acquisition" });
+  if (vertical === "oil_gas" && pick("offset") !== "strong") plan.push({ step: "Confirm the resource — pull offset production & decline", service: "Diligence" });
+  if (vertical === "geothermal" && ["unknown", "low"].includes(pick("temp"))) plan.push({ step: "Confirm temperature-at-depth from heat-flow & BHT data", service: "Diligence" });
+  if (["significant", "unknown"].includes(pick("enviro"))) plan.push({ step: "Clear the permitting path — habitat, wetlands & access screen", service: "Diligence" });
+  if (["far", "unknown"].includes(pick("infra"))) plan.push({ step: vertical === "oil_gas" ? "Confirm takeaway and secure pipeline ROW" : "Confirm interconnection and route transmission ROW", service: "Acquisition" });
+  if (!plan.length) plan.push({ step: "Confirm the clean read with full title & diligence", service: "Diligence" }, { step: "Assemble and secure the ground", service: "Acquisition" });
+  const finalPlan = plan.slice(0, 4);
+  if (composite >= 51) finalPlan.push({ step: "Then manage payments, obligations & renewals so nothing slips", service: "Management" });
 
   return {
     vertical, area: area.trim() || "Your target area", acres, tracts, composite, tier, note,
     basis: vertical === "geothermal" ? "Screened on Play Fairway Analysis (DOE/NREL method)" : "Screened on Geological Chance of Success (SPE-PRMS)",
-    lenses, fatals, verify: verify.slice(0, 5),
+    lenses, fatals, plan: finalPlan,
   };
 }
 
@@ -249,11 +258,13 @@ function EvalResult({ d }: { d: EvalOut }) {
         </div>
 
         <div style={{ marginTop: 22 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>What we&apos;d verify next</div>
-          {d.verify.map((s, i) => (
-            <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "7px 0", borderBottom: `1px solid ${HAIR}`, fontSize: 12.5 }}>
-              <span style={{ color: ACCENT, fontWeight: 700, lineHeight: 1.45 }}>{i + 1}</span>
-              <span style={{ lineHeight: 1.45 }}>{s}</span>
+          <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>How we&apos;d remedy this</div>
+          <div style={{ fontSize: 12, color: FAINT, marginBottom: 10 }}>Each step is something we do — diligence to drill-ready.</div>
+          {d.plan.map((p, i) => (
+            <div key={i} style={{ display: "flex", gap: 11, alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${HAIR}` }}>
+              <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.4 }}>{p.step}</span>
+              <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, letterSpacing: 0.3, color: SERVICE_COLOR[p.service], background: SERVICE_TINT[p.service], borderRadius: 999, padding: "3px 10px" }}>{p.service}</span>
             </div>
           ))}
         </div>
@@ -319,16 +330,16 @@ function UpsellCard({ area, onReset }: { area: string; onReset: () => void }) {
   }
   return (
     <div style={{ maxWidth: 780, margin: "20px auto 0", background: "#111827", color: "#fff", borderRadius: 14, padding: "26px 28px" }}>
-      <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: -0.3, marginBottom: 6 }}>Want the verified read?</div>
+      <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: -0.3, marginBottom: 6 }}>Want us to run this plan?</div>
       <div style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.55, marginBottom: 18, maxWidth: 540 }}>
-        This is a screen on what you know. Our team pulls the real data — title & severance, offset production, heat-flow, permitting — and gets you to secured, drill-ready ground.
+        We pull the real data, clear the title, and secure the ground — diligence to drill-ready. Drop your work email and we&apos;ll scope it for your acreage.
       </div>
       {status === "done" ? (
         <div style={{ fontSize: 14.5, fontWeight: 500 }}>Sent — we&apos;ll follow up with your verified read. <Link href="/demo" style={{ color: "#93c5fd", textDecoration: "none" }}>See the portal →</Link></div>
       ) : (
         <form onSubmit={submit} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <input type="email" required placeholder="Work email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ flex: "1 1 220px", padding: "11px 13px", borderRadius: 9, border: "1px solid #374151", background: "#1f2937", color: "#fff", fontSize: 14, outline: "none" }} />
-          <button type="submit" disabled={status === "loading"} style={{ background: ACCENT, color: "#fff", padding: "11px 20px", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 14.5, fontWeight: 600, opacity: status === "loading" ? 0.7 : 1 }}>{status === "loading" ? "Sending…" : "Get the verified read"}</button>
+          <button type="submit" disabled={status === "loading"} style={{ background: ACCENT, color: "#fff", padding: "11px 20px", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 14.5, fontWeight: 600, opacity: status === "loading" ? 0.7 : 1 }}>{status === "loading" ? "Sending…" : "Scope my plan →"}</button>
           {msg && <span style={{ fontSize: 12.5, color: "#fca5a5", width: "100%" }}>{msg}</span>}
         </form>
       )}
