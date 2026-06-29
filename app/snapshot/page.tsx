@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Wordmark } from "@/components/Brand";
+import { SiteNav } from "@/components/SiteNav";
 import EvalTool from "@/components/EvalTool";
 
 export const metadata = {
@@ -10,10 +9,7 @@ export const metadata = {
 export default function SnapshotPage() {
   return (
     <main style={{ color: "#111827" }}>
-      <header style={{ maxWidth: 980, margin: "0 auto", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ textDecoration: "none" }}><Wordmark size={16} /></Link>
-        <Link href="/sign-in" style={{ fontSize: 13, color: "#6b7280", textDecoration: "none", fontWeight: 500 }}>Client sign in →</Link>
-      </header>
+      <SiteNav />
 
       <section style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 28px", textAlign: "center" }}>
         <div style={{ display: "inline-block", fontSize: 12, fontWeight: 600, color: "#2563eb", background: "#eff6ff", borderRadius: 999, padding: "5px 13px", marginBottom: 16 }}>The free Eval</div>

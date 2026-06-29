@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Wordmark, Mark } from "@/components/Brand";
+import { SiteNav } from "@/components/SiteNav";
 
 export const metadata = {
   title: "Impact Land Services — Get to production, faster.",
@@ -27,23 +27,7 @@ export default function Home() {
   return (
     <main style={{ color: INK, background: "#fff" }}>
       {/* ── Header ───────────────────────────────────────────── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "13px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/" style={{ textDecoration: "none" }}><Wordmark size={16} /></Link>
-          <nav style={{ display: "flex", alignItems: "center", gap: 22 }}>
-            <Link href="#services" style={navLink}>Services</Link>
-            <Link href="#how" style={navLink}>How it works</Link>
-            <Link href="/demo" style={navLink}>The portal</Link>
-            <SignedOut>
-              <SignInButton mode="modal"><button style={{ ...navLink, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Client sign in</button></SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/dashboard" style={navLink}>Dashboard</Link>
-            </SignedIn>
-            <Link href="/snapshot" style={{ ...primaryBtn, padding: "9px 16px", fontSize: 13.5 }}>Run a free Eval</Link>
-          </nav>
-        </div>
-      </header>
+      <SiteNav />
 
       {/* ── Hero (split: value left, product right) ──────────── */}
       <section style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ffffff 80%)", borderBottom: `1px solid ${LINE}` }}>

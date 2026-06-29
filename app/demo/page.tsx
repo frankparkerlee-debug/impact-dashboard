@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wordmark } from "@/components/Brand";
+import { SiteNav } from "@/components/SiteNav";
 import { Snapshot } from "@/components/Snapshot";
 import GapMap from "@/components/GapMap";
 import { exampleSnapshot, demoMap } from "@/lib/demoData";
@@ -14,10 +14,7 @@ const primaryBtn = { display: "inline-block", background: "#2563eb", color: "#ff
 export default function DemoPage() {
   return (
     <main style={{ color: "#111827" }}>
-      <header style={{ maxWidth: 1180, margin: "0 auto", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ textDecoration: "none" }}><Wordmark size={16} /></Link>
-        <span style={{ fontSize: 12, color: "#6b7280", background: "#f3f4f6", borderRadius: 999, padding: "4px 11px", fontWeight: 500 }}>Live demo · sample data</span>
-      </header>
+      <SiteNav note="Live demo · sample data" />
 
       <section style={{ maxWidth: 680, margin: "0 auto", padding: "40px 24px 30px", textAlign: "center" }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.8, lineHeight: 1.12, margin: "0 0 12px" }}>See it before you commit.</h1>
