@@ -13,7 +13,8 @@ export interface SnapshotData {
   buildability: { score: number; label: string; note: string };
   indices: SnapIndex[];
   flags: SnapFlag[];
-  topOwners: { name: string; note: string }[];
+  topOwners?: { name: string; note: string }[];
+  nextSteps?: string[];
 }
 
 export function Snapshot({ data }: { data: SnapshotData }) {
@@ -57,13 +58,27 @@ export function Snapshot({ data }: { data: SnapshotData }) {
             ))}
           </div>
           <div>
-            <Label>Key ownership</Label>
-            {data.topOwners.map((o) => (
-              <div key={o.name} style={{ padding: "7px 0", borderBottom: `1px solid ${LINE}` }}>
-                <div style={{ fontWeight: 600, fontSize: 12.5 }}>{o.name}</div>
-                <div style={{ color: MUTED, fontSize: 11.5 }}>{o.note}</div>
-              </div>
-            ))}
+            {data.nextSteps ? (
+              <>
+                <Label>What we&apos;d verify next</Label>
+                {data.nextSteps.map((s, i) => (
+                  <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "7px 0", borderBottom: `1px solid ${LINE}`, fontSize: 12.5 }}>
+                    <span style={{ color: "#2563eb", fontWeight: 700, lineHeight: 1.45 }}>{i + 1}</span>
+                    <span style={{ lineHeight: 1.45 }}>{s}</span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <Label>Key ownership</Label>
+                {(data.topOwners || []).map((o) => (
+                  <div key={o.name} style={{ padding: "7px 0", borderBottom: `1px solid ${LINE}` }}>
+                    <div style={{ fontWeight: 600, fontSize: 12.5 }}>{o.name}</div>
+                    <div style={{ color: MUTED, fontSize: 11.5 }}>{o.note}</div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
 

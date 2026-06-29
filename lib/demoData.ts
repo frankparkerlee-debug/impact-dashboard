@@ -4,7 +4,7 @@ import type { MapData } from "@/lib/metrics";
 
 export const exampleSnapshot: SnapshotData = {
   area: "Sample — Geothermal Project Area",
-  location: "Beaver County, UT · T30S–32S · R12W–13W",
+  location: "Western U.S. · sample data — not a real position",
   date: "Sample report",
   tracts: 84, acres: 12450, owners: 39,
   buildability: {
@@ -28,7 +28,7 @@ export const exampleSnapshot: SnapshotData = {
   topOwners: [
     { name: "Cassidy Ranch LLC", note: "14 tracts · surface + geothermal" },
     { name: "Palley Family Trust", note: "fractional geothermal — 1/3 each" },
-    { name: "State of Utah (SITLA)", note: "9 tracts · surface" },
+    { name: "State trust lands", note: "9 tracts · surface (sample)" },
   ],
 };
 

@@ -14,9 +14,10 @@ export async function POST(req: Request) {
       const s = String(v ?? "").trim();
       return s ? s.slice(0, 500) : null;
     };
+    const source = str(body.source) || "snapshot";
     await query(
       `INSERT INTO leads (email, target_area, name, company, source) VALUES ($1,$2,$3,$4,$5)`,
-      [email.slice(0, 320), str(body.area), str(body.name), str(body.company), "snapshot"]
+      [email.slice(0, 320), str(body.area), str(body.name), str(body.company), source]
     );
     return NextResponse.json({ ok: true });
   } catch {
