@@ -1,7 +1,5 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
-import { clerkAppearance } from "@/lib/clerkAppearance";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
@@ -12,7 +10,6 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
       <html lang="en" className={sans.variable}>
         <body style={{ fontFamily: "var(--font-sans), system-ui, -apple-system, sans-serif", margin: 0, color: "#111827", background: "#ffffff", WebkitFontSmoothing: "antialiased" }}>
           <style>{`
@@ -26,6 +23,5 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
         </body>
       </html>
-    </ClerkProvider>
   );
 }

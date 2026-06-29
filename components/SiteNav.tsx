@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Wordmark } from "@/components/Brand";
 
 const MUTED = "#6b7280", LINE = "#e5e7eb", ACCENT = "#2563eb";
@@ -20,12 +19,7 @@ export function SiteNav({ note }: { note?: string }) {
           <Link href="/#services" style={navLink}>Services</Link>
           <Link href="/#how" style={navLink}>How it works</Link>
           <Link href="/demo" style={navLink}>The portal</Link>
-          <SignedOut>
-            <SignInButton mode="modal"><button style={callout}>Client sign in</button></SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard" style={callout}>Open dashboard</Link>
-          </SignedIn>
+          <Link href="/sign-in" style={callout}>Client sign in</Link>
           <Link href="/snapshot" style={primary}>Run a free Eval</Link>
         </nav>
       </div>

@@ -1,8 +1,10 @@
-import { SignIn } from "@clerk/nextjs";
+import { ClerkProvider, SignIn } from "@clerk/nextjs";
+import { clerkAppearance } from "@/lib/clerkAppearance";
 import { Wordmark } from "@/components/Brand";
 
 export default function Page() {
   return (
+    <ClerkProvider appearance={clerkAppearance}>
     <div className="signin-wrap" style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1.05fr 1fr" }}>
       <style>{`@media (max-width: 860px){.signin-wrap{grid-template-columns:1fr!important}.signin-brand{display:none!important}}`}</style>
 
@@ -22,5 +24,6 @@ export default function Page() {
         <SignIn />
       </div>
     </div>
+    </ClerkProvider>
   );
 }
