@@ -4,9 +4,9 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Wordmark, Mark } from "@/components/Brand";
 
 export const metadata = {
-  title: "Impact Land Services — Get to production.",
+  title: "Impact Land Services — Get to production, faster.",
   description:
-    "The land brokerage, rebuilt on software — feasibility to secured title, faster than anyone. Start with a free Eval of your target area, across the West.",
+    "A land brokerage empowered by AI — title, leasing, and acquisition in days, not months, so energy producers get to revenue faster. Start with a free Eval.",
 };
 
 const INK = "#111827";
@@ -49,17 +49,17 @@ export default function Home() {
       <section style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ffffff 80%)", borderBottom: `1px solid ${LINE}` }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "64px 24px 60px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(330px,1fr))", gap: 48, alignItems: "center" }}>
           <div>
-            <span style={eyebrow}>Land &amp; development intelligence for Western energy</span>
-            <h1 style={{ fontSize: 52, fontWeight: 700, letterSpacing: -1.7, lineHeight: 1.04, margin: "20px 0 16px" }}>Get to production.</h1>
+            <span style={eyebrow}>AI-empowered land brokerage · Western energy</span>
+            <h1 style={{ fontSize: 52, fontWeight: 700, letterSpacing: -1.7, lineHeight: 1.04, margin: "20px 0 16px" }}>Get to production, faster.</h1>
             <p style={{ fontSize: 18.5, color: MUTED, lineHeight: 1.5, margin: "0 0 26px", maxWidth: 480 }}>
-              The land brokerage, rebuilt on software — <b style={{ color: INK }}>feasibility to secured title, faster than anyone.</b>
+              A land brokerage, empowered by AI — <b style={{ color: INK }}>title, leasing, and acquisition in days, not months, so you get to revenue faster.</b>
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <Link href="/snapshot" style={primaryBtn}>Run a free Eval</Link>
               <Link href="/demo" style={ghostBtn}>See the portal →</Link>
             </div>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 24 }}>
-              {["Days, not months", "Self-serve screening", "Feasibility → title"].map((t) => (
+              {["Days, not months", "AI-accelerated title", "End-to-end brokerage"].map((t) => (
                 <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, color: MUTED, fontWeight: 500 }}>
                   <Check /> {t}
                 </span>
@@ -74,7 +74,7 @@ export default function Home() {
       <section style={{ maxWidth: 820, margin: "0 auto", padding: "60px 24px 16px", textAlign: "center" }}>
         <p style={{ fontSize: 23, fontWeight: 600, letterSpacing: -0.4, lineHeight: 1.4, margin: 0 }}>
           Before you produce a single megawatt, you have to own the ground — clean, clear, and contiguous.
-          <span style={{ color: MUTED, fontWeight: 500 }}> That&apos;s the part that quietly kills timelines: fragmented ownership, title defects, severed estates, holdouts. We handle it, fast — so the land is never what holds you back.</span>
+          <span style={{ color: MUTED, fontWeight: 500 }}> That&apos;s the part that quietly kills timelines: fragmented ownership, title defects, severed estates, holdouts. We handle it — leasing, title, the works — fast, so the land is never what holds you back.</span>
         </p>
       </section>
 
@@ -96,9 +96,9 @@ export default function Home() {
       <section id="services" style={{ background: PANEL, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, marginTop: 56 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "60px 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 8 }}><span style={sectionLabel}>What we do</span></div>
-          <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>More than a brokerage.</h2>
+          <h2 style={{ textAlign: "center", fontSize: 30, fontWeight: 700, letterSpacing: -0.7, margin: "0 0 8px" }}>Everything a land brokerage does — faster.</h2>
           <p style={{ textAlign: "center", fontSize: 15, color: MUTED, maxWidth: 580, margin: "0 auto 38px", lineHeight: 1.55 }}>
-            We tell you if the ground works before you commit, secure it, and keep it clean after. Start free and self-serve; bring in our team the moment you want more than a read.
+            Expert brokers, AI-accelerated — we tell you if the ground works before you commit, secure it, and keep it clean after. Start free and self-serve; bring in our team anytime.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 16 }}>
             {SERVICES.map((s) => (
@@ -134,9 +134,9 @@ export default function Home() {
       <section style={{ background: INK, color: "#fff", position: "relative", overflow: "hidden" }}>
         <TopoBackdrop dark />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "66px 24px", textAlign: "center" }}>
-          <h2 style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.1, margin: "0 0 12px" }}>Get to production.</h2>
+          <h2 style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.1, margin: "0 0 12px" }}>Get to production, faster.</h2>
           <p style={{ fontSize: 16.5, color: "#cbd5e1", lineHeight: 1.55, margin: "0 auto 28px", maxWidth: 510 }}>
-            Run a free Eval on your target area in minutes. Like what you see? We take it all the way to secured, production-ready ground.
+            Run a free Eval in minutes. Like what you see? We take it all the way — title, acquisition, and a faster path to revenue.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/snapshot" style={primaryBtn}>Run a free Eval</Link>
