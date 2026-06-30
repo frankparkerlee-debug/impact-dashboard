@@ -390,6 +390,52 @@ export async function loadPaymentRisk(tenant: string) {
   return { flags, counts, clearSoon, later, totalPaying: leasesR.rows.length };
 }
 
+// ---- OBLIGATION CALENDAR: upcoming lease payments (annual anniversaries) + lease expirations ----
+export type ObKind = "payment" | "expiration";
+export interface Obligation { kind: ObKind; id: string; name: string; leaseId: string; lessor: string; area: string; date: string; days: number }
+export interface ObligationData {
+  obligations: Obligation[];
+  counts: { overdue: number; in30: number; in90: number; payments: number; expirations: number; tracked: number };
+}
+// one-time deadline; days can be negative (already lapsed). Distinct from annivDays which rolls forward.
+function daysUntilDate(v: string): { days: number; iso: string } | null {
+  const m = v && v.match(/(\d{4})-(\d{2})-(\d{2})/); if (!m) return null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return { days: Math.round((d.getTime() - now.getTime()) / 864e5), iso: `${m[1]}-${m[2]}-${m[3]}` };
+}
+export async function loadObligations(tenant: string, horizonDays = 365): Promise<ObligationData> {
+  const Lc = COL.leases;
+  const r = await query<{ id: string; name: string; leaseId: string; lessor: string; area: string; payDue: string; expiration: string }>(
+    `SELECT monday_item_id id, name,
+            COALESCE(data->>'${Lc.leaseId}','') "leaseId",
+            COALESCE(data->>'${Lc.poc}','') lessor,
+            COALESCE(data->>'${Lc.area}','') area,
+            COALESCE(data->>'${Lc.payDue}','') "payDue",
+            COALESCE(data->>'${Lc.expiration}','') expiration
+       FROM monday_items WHERE tenant=$1 AND board='leases'`, [tenant]);
+
+  const all: Obligation[] = [];
+  for (const l of r.rows) {
+    const base = { id: l.id, name: l.name, leaseId: l.leaseId, lessor: l.lessor || "—", area: l.area || "—" };
+    const pa = annivDays(l.payDue);          // recurring rental → next annual anniversary (always ≥ 0)
+    if (pa) all.push({ ...base, kind: "payment", date: pa.iso, days: pa.days });
+    const ed = daysUntilDate(l.expiration);  // one-time deadline (negative = already lapsed)
+    if (ed) all.push({ ...base, kind: "expiration", date: ed.iso, days: ed.days });
+  }
+  all.sort((a, b) => a.days - b.days);
+  const obligations = all.filter((o) => o.days <= horizonDays);
+  const counts = {
+    overdue: obligations.filter((o) => o.days < 0).length,
+    in30: obligations.filter((o) => o.days >= 0 && o.days <= 30).length,
+    in90: obligations.filter((o) => o.days >= 0 && o.days <= 90).length,
+    payments: obligations.filter((o) => o.kind === "payment").length,
+    expirations: obligations.filter((o) => o.kind === "expiration").length,
+    tracked: obligations.length,
+  };
+  return { obligations, counts };
+}
+
 // ---- DOCUMENTS: coverage + gaps over the title runsheets / index / lease PDFs / W-9s ----
 export interface DocLink { url: string; label: string }
 export interface TractDoc { id: string; name: string; aoi: string; owner: string; leased: boolean; titleDone: boolean; title?: DocLink; index?: DocLink }

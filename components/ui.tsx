@@ -148,13 +148,14 @@ export function Pending({ note }: { note: string }) {
   return <div style={{ ...panel, background: SUBTLE, borderStyle: "dashed", boxShadow: "none" }}><div style={{ fontSize: 13, color: MUTED }}>⏳ {note}</div></div>;
 }
 
-export function Nav({ active }: { active: "overview" | "leasing" | "title" | "payments" | "map" | "documents" }) {
+export function Nav({ active }: { active: "overview" | "leasing" | "title" | "payments" | "calendar" | "map" | "documents" }) {
   const items = [
     { key: "overview", label: "Overview", href: "/dashboard" },
     { key: "map", label: "Gap Map", href: "/dashboard/map" },
     { key: "leasing", label: "Leasing", href: "/dashboard/leasing" },
     { key: "title", label: "Title", href: "/dashboard/title" },
     { key: "payments", label: "Cleared to Pay", href: "/dashboard/payments" },
+    { key: "calendar", label: "Calendar", href: "/dashboard/calendar" },
     { key: "documents", label: "Documents", href: "/dashboard/documents" },
   ] as const;
   return (
