@@ -18,7 +18,7 @@ export function SiteNav({ note }: { note?: string }) {
         </div>
         <nav style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <Link href="/#services" style={navLink}>Services</Link>
-          <Link href="/#how" style={navLink}>How it works</Link>
+          <Link href="/case-study" style={navLink}>Case study</Link>
           <Link href="/demo" style={navLink}>The portal</Link>
           <SignedOut>
             <SignInButton mode="modal"><button style={callout}>Client sign in</button></SignInButton>
