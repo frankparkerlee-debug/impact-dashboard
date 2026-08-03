@@ -101,7 +101,8 @@ export default function AbstractUploader() {
         {err && <div style={{ marginTop: 14, fontSize: 13, color: "#dc2626", lineHeight: 1.55, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 9, padding: "10px 13px" }}>{err}</div>}
 
         <div style={{ fontSize: 11.5, color: FAINT, marginTop: 14, lineHeight: 1.55 }}>
-          We read the document and return an abstract. We don&apos;t store your file. Scanned images need OCR first — send those to us and we&apos;ll handle them.
+          Your uploaded file is read and discarded — we don&apos;t retain it. We do keep the abstract we generate, so we can send it to you and support you on the file.
+          Scanned images need OCR first — send those to us and we&apos;ll handle them. Don&apos;t upload anything you&apos;re not free to share.
         </div>
       </div>
 
