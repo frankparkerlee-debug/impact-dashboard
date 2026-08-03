@@ -9,8 +9,11 @@ const MAX_FILES = 5;
 const MAX_BYTES = 15 * 1024 * 1024;
 const MIN_TEXT = 60;                 // short instruments (extensions, ratifications) are legitimate
 // Cost controls. This endpoint is public and every run costs money.
+// ~$0.11 per typical abstract, ~$0.32 worst case at the MAX_CHARS ceiling —
+// so the global cap is roughly the daily spend ceiling in dimes. Raise it via
+// env once real demand shows up; the default is sized for abuse, not usage.
 const PER_IP_PER_DAY = Number(process.env.ABSTRACT_PER_IP_PER_DAY ?? 3);
-const GLOBAL_PER_DAY = Number(process.env.ABSTRACT_GLOBAL_PER_DAY ?? 200);
+const GLOBAL_PER_DAY = Number(process.env.ABSTRACT_GLOBAL_PER_DAY ?? 50);
 
 function clientIp(req: Request): string {
   const h = req.headers;
