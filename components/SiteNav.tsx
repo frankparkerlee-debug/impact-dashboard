@@ -17,9 +17,9 @@ export function SiteNav({ note }: { note?: string }) {
           {note && <span style={{ fontSize: 11.5, color: MUTED, background: "#f3f4f6", borderRadius: 999, padding: "3px 10px", fontWeight: 500, whiteSpace: "nowrap" }}>{note}</span>}
         </div>
         <nav style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <Link href="/lease-intelligence" style={navLink}>Lease Intelligence</Link>
           <Link href="/#services" style={navLink}>Services</Link>
           <Link href="/case-study" style={navLink}>Case study</Link>
-          <Link href="/demo" style={navLink}>The portal</Link>
           <SignedOut>
             <SignInButton mode="modal"><button style={callout}>Client sign in</button></SignInButton>
           </SignedOut>

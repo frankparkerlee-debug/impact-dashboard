@@ -16,7 +16,8 @@
     "next": "^15.0.0",
     "pg": "^8.12.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "unpdf": "^1.8.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -26,5 +27,7 @@
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
